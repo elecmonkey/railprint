@@ -60,7 +60,7 @@ The JavaScript toolchain is [Rstack](https://rstack.rs), run as `pnpm exec rs`.
 | `pnpm dev`   | Start the web app at http://localhost:3000                          |
 | `pnpm build` | Fetch the font source, then build the web app into `apps/web/dist/` |
 | `pnpm test`  | Run all package tests                                               |
-| `pnpm check` | Lint, type check and format check                                   |
+| `pnpm check` | Lint, type check and format check (`rs check --type-check`)         |
 
 ## Package conventions
 

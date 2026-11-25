@@ -8,7 +8,6 @@
     "dev": "pnpm --filter web dev",
     "test": "pnpm -r test",
     "check": "rs check --type-check",
-    "lint": "rs lint",
     "format": "rs fmt",
     "prepare": "rs hooks",
     "sources": "node packages/sources/src/cli.ts",
