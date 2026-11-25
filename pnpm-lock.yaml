@@ -162,21 +162,84 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@fontsource-variable/geist':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@napi-rs/canvas':
+      specifier: ^1.2.0
+      version: 1.2.0
+    '@rsbuild/plugin-react':
+      specifier: ^2.1.1
+      version: 2.1.1
+    '@testing-library/dom':
+      specifier: ^10.4.2
+      version: 10.4.2
+    '@testing-library/jest-dom':
+      specifier: ^7.0.1
+      version: 7.0.1
+    '@testing-library/react':
+      specifier: ^16.3.3
+      version: 16.3.3
+    '@types/d3-geo':
+      specifier: ^3.1.1
+      version: 3.1.1
+    '@types/geojson':
+      specifier: ^7946.0.16
+      version: 7946.0.16
+    '@types/node':
+      specifier: ^26.6.6
+      version: 26.6.6
+    '@types/react':
+      specifier: ^19.3.0
+      version: 19.3.0
+    '@types/react-dom':
+      specifier: ^19.3.0
+      version: 19.3.0
+    '@types/subset-font':
+      specifier: ^2.3.0
+      version: 2.3.0
+    d3-geo:
+      specifier: ^3.1.2
+      version: 3.1.2
+    h5wasm:
+      specifier: ^0.10.3
+      version: 0.10.3
+    happy-dom:
+      specifier: ^21.0.4
+      version: 21.0.4
+    react:
+      specifier: ^19.3.1
+      version: 19.3.1
+    react-dom:
+      specifier: ^19.3.1
+      version: 19.3.1
+    rstack:
+      specifier: ^0.9.3
+      version: 0.9.3
+    sharp:
+      specifier: ^0.35.5
+      version: 0.35.5
+    subset-font:
+      specifier: ^2.9.0
+      version: 2.9.0
+
 importers:
 
   .:
     devDependencies:
       '@types/node':
-        specifier: ^26.6.6
+        specifier: 'catalog:'
         version: 26.6.6
       rstack:
-        specifier: ^0.9.3
+        specifier: 'catalog:'
         version: 0.9.3(typescript@7.0.2)
 
   apps/web:
     dependencies:
       '@fontsource-variable/geist':
-        specifier: 5.3.0
+        specifier: 'catalog:'
         version: 5.3.0
       '@railprint/render':
         specifier: workspace:^
@@ -185,10 +248,10 @@ importers:
         specifier: workspace:^
         version: link:../../packages/style
       react:
-        specifier: ^19.3.1
+        specifier: 'catalog:'
         version: 19.3.1
       react-dom:
-        specifier: ^19.3.1
+        specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
     devDependencies:
       '@railprint/font':
@@ -198,25 +261,25 @@ importers:
         specifier: workspace:^
         version: link:../../packages/layout
       '@rsbuild/plugin-react':
-        specifier: ^2.1.1
+        specifier: 'catalog:'
         version: 2.1.1(@rsbuild/core@2.3.3)(@rspack/core@2.3.3(@swc/helpers@0.5.24))
       '@testing-library/dom':
-        specifier: ^10.4.2
+        specifier: 'catalog:'
         version: 10.4.2
       '@testing-library/jest-dom':
-        specifier: ^7.0.1
+        specifier: 'catalog:'
         version: 7.0.1(@testing-library/dom@10.4.2)
       '@testing-library/react':
-        specifier: ^16.3.3
+        specifier: 'catalog:'
         version: 16.3.3(@testing-library/dom@10.4.2)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       '@types/react':
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0
       '@types/react-dom':
-        specifier: ^19.3.0
+        specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
       happy-dom:
-        specifier: ^21.0.4
+        specifier: 'catalog:'
         version: 21.0.4
 
   packages/basemap:
@@ -240,7 +303,7 @@ importers:
   packages/export:
     dependencies:
       '@napi-rs/canvas':
-        specifier: ^1.2.0
+        specifier: 'catalog:'
         version: 1.2.0
       '@railprint/layout':
         specifier: workspace:^
@@ -252,14 +315,14 @@ importers:
         specifier: workspace:^
         version: link:../style
       d3-geo:
-        specifier: ^3.1.2
+        specifier: 'catalog:'
         version: 3.1.2
       sharp:
-        specifier: ^0.35.5
+        specifier: 'catalog:'
         version: 0.35.5(@types/node@26.6.6)
     devDependencies:
       '@types/d3-geo':
-        specifier: ^3.1.1
+        specifier: 'catalog:'
         version: 3.1.1
 
   packages/font:
@@ -271,11 +334,11 @@ importers:
         specifier: workspace:^
         version: link:../sources
       subset-font:
-        specifier: ^2.9.0
+        specifier: 'catalog:'
         version: 2.9.0
     devDependencies:
       '@types/subset-font':
-        specifier: ^2.3.0
+        specifier: 'catalog:'
         version: 2.3.0
 
   packages/layout: {}
@@ -337,14 +400,14 @@ importers:
         specifier: workspace:^
         version: link:../style
       d3-geo:
-        specifier: ^3.1.2
+        specifier: 'catalog:'
         version: 3.1.2
     devDependencies:
       '@types/d3-geo':
-        specifier: ^3.1.1
+        specifier: 'catalog:'
         version: 3.1.1
       '@types/geojson':
-        specifier: ^7946.0.16
+        specifier: 'catalog:'
         version: 7946.0.16
 
   packages/sources:
@@ -370,10 +433,10 @@ importers:
         specifier: workspace:^
         version: link:../sources
       h5wasm:
-        specifier: ^0.10.3
+        specifier: 'catalog:'
         version: 0.10.3
       sharp:
-        specifier: ^0.35.5
+        specifier: 'catalog:'
         version: 0.35.5(@types/node@26.6.6)
 
 packages:

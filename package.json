@@ -21,8 +21,8 @@
     "tiles": "pnpm --filter @railprint/tiles build"
   },
   "devDependencies": {
-    "@types/node": "^26.6.6",
-    "rstack": "^0.9.3"
+    "@types/node": "catalog:",
+    "rstack": "catalog:"
   },
   "packageManager": "pnpm@12.18.0",
   "engines": {

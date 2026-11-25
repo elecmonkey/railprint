@@ -14,14 +14,14 @@
     "test": "rs test"
   },
   "dependencies": {
-    "@napi-rs/canvas": "^1.2.0",
+    "@napi-rs/canvas": "catalog:",
     "@railprint/layout": "workspace:^",
     "@railprint/render": "workspace:^",
     "@railprint/style": "workspace:^",
-    "d3-geo": "^3.1.2",
-    "sharp": "^0.35.5"
+    "d3-geo": "catalog:",
+    "sharp": "catalog:"
   },
   "devDependencies": {
-    "@types/d3-geo": "^3.1.1"
+    "@types/d3-geo": "catalog:"
   }
 }
