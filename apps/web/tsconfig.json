@@ -1,4 +1,4 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src", "rstack.config.ts"]
+  "include": ["src", "plugins", "rstack.config.ts"]
 }
