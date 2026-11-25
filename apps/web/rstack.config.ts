@@ -23,6 +23,7 @@ define.app(async () => {
       assetsInclude: /\.geojson$/,
     },
     output: {
+      module: true,
       filename: {
         // Hosts compress .json but serve unknown .geojson as raw bytes.
         assets: (pathData) =>
