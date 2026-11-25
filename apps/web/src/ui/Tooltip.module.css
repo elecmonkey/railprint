@@ -1,0 +1,59 @@
+.tooltip {
+  position: absolute;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 16px auto;
+  column-gap: 6px;
+  align-items: center;
+  max-width: 280px;
+  padding: 7px 12px 8px 10px;
+  border: 1px solid var(--rp-border);
+  border-radius: 8px;
+  color: var(--rp-text);
+  background: var(--rp-surface);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  pointer-events: none;
+}
+
+.tooltip p {
+  margin: 0;
+}
+
+/* The icon sits beside the name; the second line lines up under the name. */
+.icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  --icon: 14px;
+}
+
+.name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+}
+
+.detail {
+  grid-column: 2;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--rp-text-muted);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.tag {
+  padding: 0 4px;
+  border: 1px solid var(--rp-border);
+  border-radius: 4px;
+  color: var(--rp-text-muted);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 15px;
+}

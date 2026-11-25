@@ -1,0 +1,81 @@
+.app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  color: var(--rp-text);
+  background: var(--rp-background);
+  font-family: var(--rp-font);
+}
+
+.status {
+  margin: 40vh auto 0;
+  text-align: center;
+  color: var(--rp-text-muted);
+}
+
+/* Terrain tiles that are missing or from another build. */
+.notice {
+  position: absolute;
+  left: 16px;
+  bottom: 12px;
+  margin: 0;
+  color: var(--rp-text-muted);
+  font-size: 11px;
+  line-height: 14px;
+}
+
+.attribution {
+  position: absolute;
+  right: 16px;
+  bottom: 12px;
+  margin: 0;
+  color: var(--rp-text-muted);
+  font-size: 11px;
+  line-height: 14px;
+  transition: opacity 0.5s ease;
+}
+
+.attribution a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.attribution a:hover {
+  color: var(--rp-text);
+  text-decoration: underline;
+}
+
+/* Gone after the fade, so it no longer takes clicks. */
+.faded {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.5s ease,
+    visibility 0s linear 0.5s;
+}
+
+/*
+ * On a phone the title card sits in the bottom-right corner with the OSM
+ * credit above it, so the card stays put when the credit fades. On wider
+ * screens the two keep their own corners.
+ */
+.corner {
+  display: contents;
+}
+
+@media (max-width: 600px) {
+  .corner {
+    position: absolute;
+    right: 16px;
+    bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  /* Doubled to outrank each child's own position rule. */
+  .corner.corner > * {
+    position: static;
+  }
+}

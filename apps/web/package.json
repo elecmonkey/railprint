@@ -1,0 +1,30 @@
+{
+  "name": "web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rs build",
+    "dev": "rs dev",
+    "preview": "rs preview",
+    "test": "rs test"
+  },
+  "dependencies": {
+    "@fontsource-variable/geist": "5.3.0",
+    "@railprint/render": "workspace:^",
+    "@railprint/style": "workspace:^",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "devDependencies": {
+    "@railprint/font": "workspace:^",
+    "@railprint/layout": "workspace:^",
+    "@rsbuild/plugin-react": "^2.1.1",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "happy-dom": "^21.0.4"
+  }
+}
