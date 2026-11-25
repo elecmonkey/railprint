@@ -1,5 +1,5 @@
 import { expect, test } from 'rstack/test';
-import { viewBox } from '../src/terrain.ts';
+import { tileOnScreen, viewBox } from '../src/terrain.ts';
 import {
   TILE_LEVELS,
   tileBounds,
@@ -45,6 +45,26 @@ test('the view box covers what the globe shows', () => {
   expect(viewBox({ center: [0, 80], pixelsPerDegree: 2 }, 800, 600)).toEqual([
     -180, -10, 180, 90,
   ]);
+});
+
+test('terrain rejects tiles that only meet the broad geographic box', () => {
+  const view = { center: [0, 0] as [number, number], pixelsPerDegree: 33 };
+  const box = viewBox(view, 1600, 450);
+  expect(tilesInBox(3, box)).toContainEqual([24, 9]);
+  expect(tileOnScreen(tileBounds(3, 24, 9), view, 1600, 450)).toBe(false);
+  expect(tileOnScreen(tileBounds(3, 24, 11), view, 1600, 450)).toBe(true);
+});
+
+test('terrain keeps tiles crossing a small viewport and the globe limb', () => {
+  const close = {
+    center: [0.5, 0.5] as [number, number],
+    pixelsPerDegree: 4000,
+  };
+  expect(tileOnScreen(tileBounds(4, 48, 23), close, 300, 600)).toBe(true);
+
+  const globe = { center: [0, 0] as [number, number], pixelsPerDegree: 2 };
+  expect(tileOnScreen([89.5, -5, 91, 5], globe, 400, 300)).toBe(true);
+  expect(tileOnScreen([91, -5, 92, 5], globe, 400, 300)).toBe(false);
 });
 
 test('the tile vertex projection matches d3', async () => {

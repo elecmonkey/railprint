@@ -66,8 +66,18 @@ export function projectPoint(
   view: View,
   width: number,
   height: number,
-  [lon, lat]: [number, number],
+  point: [number, number],
 ): { x: number; y: number; facing: boolean } {
+  const { x, y, depth } = projectTerrainPoint(view, width, height, point);
+  return { x, y, facing: depth > 0 };
+}
+
+function projectTerrainPoint(
+  view: View,
+  width: number,
+  height: number,
+  [lon, lat]: [number, number],
+) {
   const k = view.pixelsPerDegree / DEG;
   const lambda = (lon - view.center[0]) * DEG;
   const phi = lat * DEG;
@@ -77,7 +87,7 @@ export function projectPoint(
   const z = Math.sin(phi);
   const xr = x * Math.cos(phi0) + z * Math.sin(phi0);
   const zr = z * Math.cos(phi0) - x * Math.sin(phi0);
-  return { x: width / 2 + k * y, y: height / 2 - k * zr, facing: xr > 0 };
+  return { x: width / 2 + k * y, y: height / 2 - k * zr, depth: xr };
 }
 
 /** Quads along each side of a tile's mesh. */
@@ -451,7 +461,8 @@ export class TerrainRenderer {
     };
 
     const box = viewBox(view, width, height);
-    const level = tileLevelFor(1 / (view.pixelsPerDegree * ratio));
+    // Choose terrain detail in CSS pixels while drawing at device resolution.
+    const level = tileLevelFor(1 / view.pixelsPerDegree);
     const inView = (tile: Tile) =>
       tile.box[1] < box[3] &&
       tile.box[3] > box[1] &&
@@ -460,7 +471,11 @@ export class TerrainRenderer {
         : tile.box[0] < box[2] || tile.box[2] > box[0]);
     const wanted: Tile[] = [];
     for (const [x, y] of tilesInBox(level, box))
-      if (this.exists(level, x, y)) wanted.push(this.tile(level, x, y));
+      if (
+        this.exists(level, x, y) &&
+        tileOnScreen(tileBounds(level, x, y), view, width, height)
+      )
+        wanted.push(this.tile(level, x, y));
     const missing = wanted.some((tile) => tile.state !== 'ready');
     if (missing) {
       // Until the level is complete, whatever is loaded stands in, coarse
@@ -490,4 +505,51 @@ export class TerrainRenderer {
     this.pump();
     this.evict();
   }
+}
+
+/**
+ * Reject tiles whose projected bounds miss the viewport or whose mesh lies
+ * behind the globe. Keep both sides of the limb in the bounds because a
+ * triangle with vertices on either side can still be partly visible.
+ */
+export function tileOnScreen(
+  box: Box,
+  view: View,
+  width: number,
+  height: number,
+): boolean {
+  const [w, s, e, n] = box;
+  const steps = 4;
+  const lonStep = (e - w) / steps;
+  const latStep = (n - s) / steps;
+  let left = Infinity;
+  let top = Infinity;
+  let right = -Infinity;
+  let bottom = -Infinity;
+  let depth = -Infinity;
+  for (let j = 0; j <= steps; j++)
+    for (let i = 0; i <= steps; i++) {
+      const p = projectTerrainPoint(view, width, height, [
+        w + lonStep * i,
+        s + latStep * j,
+      ]);
+      left = Math.min(left, p.x);
+      top = Math.min(top, p.y);
+      right = Math.max(right, p.x);
+      bottom = Math.max(bottom, p.y);
+      depth = Math.max(depth, p.depth);
+    }
+
+  // Each rotated unit-sphere component has second derivatives bounded by 1
+  // in radians. Linear interpolation misses by at most step²/8 per axis,
+  // so padding by their sum bounds every vertex of the finer render mesh.
+  const error = ((lonStep * DEG) ** 2 + (latStep * DEG) ** 2) / 8;
+  const margin = 1 + (error * view.pixelsPerDegree) / DEG;
+  return (
+    depth >= -error - 1e-6 &&
+    right >= -margin &&
+    left <= width + margin &&
+    bottom >= -margin &&
+    top <= height + margin
+  );
 }
