@@ -274,12 +274,27 @@ export function draw({
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
-  const emphasise = (line: RenderLine | undefined, factor: number) => {
+  const emphasise = (
+    line: RenderLine | undefined,
+    factor: number,
+    glow = false,
+  ) => {
     if (!line) return;
     const style = theme.lines[line.category];
     const width = Math.max(2, style.width * scale * factor);
     ctx.beginPath();
     trace(line.chunks[level]!);
+    if (glow) {
+      // The selection, whatever its category: a soft glow in its own colour.
+      ctx.save();
+      ctx.strokeStyle = theme.selection;
+      ctx.shadowColor = theme.selection;
+      ctx.shadowBlur = 10;
+      ctx.globalAlpha = 0.55;
+      ctx.lineWidth = width + 6;
+      ctx.stroke();
+      ctx.restore();
+    }
     ctx.strokeStyle = theme.halo;
     ctx.lineWidth = width + 3;
     ctx.stroke();
@@ -291,7 +306,7 @@ export function draw({
     id === undefined
       ? undefined
       : data.lines.find((l) => l.properties.id === id);
-  emphasise(byId(highlight.line), 1.6);
+  emphasise(byId(highlight.line), 1.6, true);
   if (highlight.hover !== highlight.line) emphasise(byId(highlight.hover), 1.4);
 
   // Stations. All line endpoints are treated alike: names appear first,

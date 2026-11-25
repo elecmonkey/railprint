@@ -29,6 +29,8 @@ export interface Theme {
   /** Halo behind labels and line casing. */
   halo: string;
   accent: string;
+  /** Glow around the selected line, apart from every line colour. */
+  selection: string;
   surface: string;
   border: string;
   lines: Record<LineCategory, LineStyle>;
@@ -71,12 +73,13 @@ export const light: Theme = {
   textMuted: '#62707a',
   halo: '#f6f3ea',
   accent: '#b8432f',
+  selection: '#2b7de9',
   surface: 'rgba(255, 255, 255, 0.86)',
   border: 'rgba(35, 48, 58, 0.14)',
   lines: {
     emu: { color: '#c0392b', width: 2.3, z: 3 },
     conventional: { color: '#2e3f4c', width: 1.9, z: 2 },
-    link: { color: '#8a99a3', width: 1.1, z: 1 },
+    link: { color: '#8a99a3', width: 1.5, z: 1 },
   },
   station: {
     fill: '#ffffff',
@@ -103,12 +106,13 @@ export const dark: Theme = {
   textMuted: '#93a1aa',
   halo: '#1d262c',
   accent: '#ef6f55',
+  selection: '#5aa9ff',
   surface: 'rgba(24, 32, 38, 0.88)',
   border: 'rgba(228, 233, 236, 0.14)',
   lines: {
     emu: { color: '#ff6b52', width: 2.3, z: 3 },
     conventional: { color: '#d7dee3', width: 1.9, z: 2 },
-    link: { color: '#6f7f89', width: 1.1, z: 1 },
+    link: { color: '#6f7f89', width: 1.5, z: 1 },
   },
   station: {
     fill: '#1d262c',
