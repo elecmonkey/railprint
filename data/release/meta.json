@@ -11,10 +11,10 @@
     "lines": 180,
     "stations": 2092,
     "endpoints": 240,
-    "lengthKm": 35658
+    "lengthKm": 35656
   },
   "bytes": {
-    "lines": 3346099,
+    "lines": 3345197,
     "stations": 461466
   }
 }
