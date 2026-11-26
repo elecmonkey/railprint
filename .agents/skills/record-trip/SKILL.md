@@ -25,7 +25,7 @@ The catalog in `data/catalog/` lists the sections the author has ridden, divided
 
 ## 3. Edit and match
 
-1. Edit `lines.json` (see `data/catalog/README.md` for the format). Pin endpoints already known: copy `osm.from` / `osm.to` from lines ending at the same place. Remove the `paths.json` entries of lines that are changed or removed. Run `pnpm catalog check`.
+1. Edit `lines.json` (see `data/catalog/README.md` for the format). Pin endpoints already known: copy `osm.from` / `osm.to` from lines ending at the same place. Remove the `paths.json` entries of lines that are changed or removed. Run `pnpm run catalog check`.
 2. `pnpm match <id...>`, then read `data/cache/matching/report.md`: endpoints, length, detour, coverage, relations.
 3. `pnpm match overlaps <id...>` lists track shared with other lines. Short overlaps at stations and junctions are expected; a long one, or one as long as the shorter line, means a line contains another and must be merged.
 4. A wrong route: pin the endpoints, or force relations with `osm.relations` and `osm.fixedRelations: true`, and match again.
@@ -39,5 +39,5 @@ Only after the author confirms the result:
 
 1. `pnpm match confirm <id...>`
 2. `pnpm exec rs fmt data/catalog/lines.json` (confirming rewrites the layout of `notes`)
-3. `pnpm release`, then `pnpm catalog check`: every line confirmed.
+3. `pnpm release`, then `pnpm run catalog check`: every line confirmed.
 4. Commit `data/catalog/` and `data/release/` together (`data: …`). Push only when asked.

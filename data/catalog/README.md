@@ -5,7 +5,7 @@ Two files describe every railway section the map draws, divided the way the auth
 - `lines.json`: one record per line: name, endpoints, category, and its correspondence with OSM. Hand-maintained, except the `osm` block, which `pnpm match confirm` writes.
 - `paths.json`: the exact confirmed track path of each line, written by `pnpm match confirm`, one line of text per catalog line.
 
-Run `pnpm catalog check` after editing.
+Run `pnpm run catalog check` after editing.
 
 ## A line
 
@@ -58,7 +58,7 @@ Run `pnpm catalog check` after editing.
 2. `pnpm match <id>` and read `data/cache/matching/report.md`.
 3. `pnpm match confirm <id>`, then `pnpm release`.
 
-## Rules checked by `pnpm catalog check`
+## Rules checked by `pnpm run catalog check`
 
 - ids are unique and match the name and endpoints; no two lines repeat the same name and endpoints
 - endpoints parse in the notation above, and differ from each other

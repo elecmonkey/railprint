@@ -37,8 +37,8 @@ Run from the repository root:
 | `pnpm sources status`                         | Which external sources are present locally                                         |
 | `pnpm sources fetch [id...]`                  | Download missing sources and update the lock                                       |
 | `pnpm sources verify [id...]`                 | Re-hash downloaded files against the lock                                          |
-| `pnpm catalog check`                          | Validate the line catalog and print a summary                                      |
-| `pnpm catalog notes`                          | List catalog lines with open questions                                             |
+| `pnpm run catalog check`                      | Validate the line catalog and print a summary                                      |
+| `pnpm run catalog notes`                      | List catalog lines with open questions                                             |
 | `pnpm osm update [id]`                        | Apply OSM change files to a downloaded extract                                     |
 | `pnpm osm extract`                            | Build the railway extract in `data/cache/osm/`                                     |
 | `pnpm match [line-id...]`                     | Match catalog lines to OSM, write `data/cache/matching/report.{json,md}`           |
