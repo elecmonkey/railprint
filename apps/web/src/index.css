@@ -5,8 +5,18 @@ body,
   margin: 0;
 }
 
+html {
+  color-scheme: light dark;
+}
+
 body {
   background: var(--rp-background, #e9eef0);
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: var(--rp-background, #0f1519);
+  }
 }
 
 /* Noto Sans SC cut down to the characters the site shows, built before each

@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import {
   clampZoom,
   dataPoints,
@@ -31,10 +38,16 @@ import { Toolbar } from './ui/Toolbar';
 import { Tooltip } from './ui/Tooltip';
 import styles from './App.module.css';
 
+const DARK_SCHEME = '(prefers-color-scheme: dark)';
+
 function preferredTheme(): 'light' | 'dark' {
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
+  return window.matchMedia?.(DARK_SCHEME).matches ? 'dark' : 'light';
+}
+
+function subscribeToPreferredTheme(onChange: () => void) {
+  const preference = window.matchMedia?.(DARK_SCHEME);
+  preference?.addEventListener('change', onChange);
+  return () => preference?.removeEventListener('change', onChange);
 }
 
 /** Closest zoom when focusing a line or station, in pixels per degree. */
@@ -74,7 +87,12 @@ export function App() {
   // The basemap waits for the railway, which matters more.
   const basemap = useBasemap(release.status === 'ready');
   const [terrain, setTerrain] = useState<TerrainStatus>();
-  const [themeName, setThemeName] = useState<'light' | 'dark'>(preferredTheme);
+  const systemTheme = useSyncExternalStore(
+    subscribeToPreferredTheme,
+    preferredTheme,
+  );
+  const [themeOverride, setThemeOverride] = useState<'light' | 'dark'>();
+  const themeName = themeOverride ?? systemTheme;
   const [view, setView] = useState<View>();
   // The OSM credit fades once the reader first moves the map.
   const [moved, setMoved] = useState(false);
@@ -267,7 +285,7 @@ export function App() {
           {view && (
             <Toolbar
               theme={themeName}
-              onTheme={setThemeName}
+              onTheme={setThemeOverride}
               onZoom={(factor) => {
                 const s = size.current;
                 if (s)
