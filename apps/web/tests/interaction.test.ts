@@ -53,3 +53,13 @@ test('zooming keeps the point under the cursor', () => {
   expect(x).toBeCloseTo(anchor[0], 3);
   expect(y).toBeCloseTo(anchor[1], 3);
 });
+
+test('zooming from outside the globe keeps its centre fixed', () => {
+  const view: View = { center: [110, 30], pixelsPerDegree: 4 };
+  const anchor: [number, number] = [W - 10, H / 2];
+  // The cursor starts over the background and ends inside the enlarged disc.
+  const zoomed = zoomView(view, 2, anchor, W, H);
+  expect(zoomed.pixelsPerDegree).toBe(8);
+  expect(zoomed.center).toEqual(view.center);
+  expect(zoomView(view, 0.5, anchor, W, H).center).toEqual(view.center);
+});

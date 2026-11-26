@@ -62,7 +62,7 @@ export function wheelView(
 
 /**
  * View after zooming by `factor`, keeping the geographic point under
- * `anchor` (CSS pixels) where it is.
+ * `anchor` (CSS pixels) where it is. Outside the globe, zoom about its centre.
  */
 export function zoomView(
   view: View,
@@ -72,11 +72,15 @@ export function zoomView(
   height: number,
 ): View {
   const before = createProjection(view, width, height);
-  const target = before.invert?.(anchor);
   let zoomed: View = {
     ...view,
     pixelsPerDegree: clampZoom(view.pixelsPerDegree * factor),
   };
+  const [cx, cy] = before.translate();
+  // Orthographic inversion also returns coordinates outside the visible disc.
+  if (Math.hypot(anchor[0] - cx, anchor[1] - cy) > before.scale())
+    return zoomed;
+  const target = before.invert?.(anchor);
   if (!target || !Number.isFinite(target[0])) return zoomed;
   // Moving the centre rotates the globe, so refine a few times.
   for (let i = 0; i < 6; i++) {
