@@ -29,7 +29,7 @@ export interface Theme {
   /** Halo behind labels and line casing. */
   halo: string;
   accent: string;
-  /** Glow around the selected line, apart from every line colour. */
+  /** Glow around the selected line or station, apart from every line colour. */
   selection: string;
   surface: string;
   border: string;

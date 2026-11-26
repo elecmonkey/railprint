@@ -117,6 +117,9 @@ export const ZOOM = {
 /** Opacity of the other lines while one is selected. */
 const FADED = 0.3;
 
+/** Opacity of the other stations and names while one is selected. */
+const STATION_FADED = 0.55;
+
 /** Symbol radius in CSS pixels at full size. */
 const RADIUS = { endpoint: 2.8, intermediate: 1.8 } as const;
 
@@ -345,12 +348,7 @@ export function draw({
   placed.sort((a, b) => priority(b.s) - priority(a.s));
 
   const symbolScale = Math.min(1.3, Math.max(0.6, Math.sqrt(ppd / 120)));
-  ctx.lineWidth = 1.2;
-  for (const { x, y, s, symbol } of placed) {
-    if (!symbol) continue;
-    const r =
-      (s.properties.endpoint ? RADIUS.endpoint : RADIUS.intermediate) *
-      symbolScale;
+  const shape = (s: RenderStation, x: number, y: number, r: number) => {
     ctx.beginPath();
     if (s.properties.kind === 'junction') {
       ctx.moveTo(x - r, y);
@@ -361,18 +359,56 @@ export function draw({
     } else {
       ctx.arc(x, y, r, 0, Math.PI * 2);
     }
+  };
+  let selected: (typeof placed)[number] | undefined;
+  const others = highlight.station ? STATION_FADED : 1;
+  ctx.globalAlpha = others;
+  ctx.lineWidth = 1.2;
+  for (const p of placed) {
+    if (!p.symbol) continue;
+    // The selected station is drawn last, above its neighbours.
+    if (p.s.properties.osm === highlight.station) {
+      selected = p;
+      continue;
+    }
+    const { x, y, s } = p;
+    const r =
+      (s.properties.endpoint ? RADIUS.endpoint : RADIUS.intermediate) *
+      symbolScale;
+    shape(s, x, y, r);
     ctx.fillStyle = theme.station.fill;
     ctx.fill();
     ctx.strokeStyle = theme.station.stroke;
     ctx.stroke();
-    if (s.properties.osm === highlight.station) {
-      ctx.beginPath();
-      ctx.arc(x, y, r + 3.5, 0, Math.PI * 2);
-      ctx.strokeStyle = theme.accent;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      ctx.lineWidth = 1.2;
-    }
+  }
+  ctx.globalAlpha = 1;
+  if (selected) {
+    // Like the selected line: enlarged, cased in the halo colour and set in
+    // a soft glow of the selection colour.
+    const { x, y, s } = selected;
+    const r = Math.max(
+      RADIUS.endpoint,
+      (s.properties.endpoint ? RADIUS.endpoint : RADIUS.intermediate) *
+        symbolScale *
+        1.6,
+    );
+    ctx.save();
+    shape(s, x, y, r + 3);
+    ctx.fillStyle = theme.selection;
+    ctx.shadowColor = theme.selection;
+    ctx.shadowBlur = 10;
+    ctx.globalAlpha = 0.55;
+    ctx.fill();
+    ctx.restore();
+    shape(s, x, y, r);
+    ctx.strokeStyle = theme.halo;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.fillStyle = theme.station.fill;
+    ctx.fill();
+    ctx.strokeStyle = theme.station.stroke;
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
   }
 
   // Labels with greedy collision avoidance.
@@ -400,6 +436,7 @@ export function draw({
     )
       continue;
     boxes.push(box);
+    ctx.globalAlpha = s.properties.osm === highlight.station ? 1 : others;
     ctx.textAlign = 'left';
     ctx.strokeStyle = theme.halo;
     ctx.lineWidth = 3;
@@ -408,6 +445,7 @@ export function draw({
     ctx.fillText(text, left, y);
     labels++;
   }
+  ctx.globalAlpha = 1;
 
   ctx.restore();
   return { level, stations: placed.length, labels };
