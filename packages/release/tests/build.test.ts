@@ -110,12 +110,15 @@ test('collects stations from relation members, path nodes and endpoints', () => 
     endpoint: true,
     lines: ['hs'],
   });
-  // The subway station named 丙 is not a railway place.
+  // A station explicitly assigned to the line is included even when the
+  // relation omits it. The subway station named 丙 is not a railway place.
+  expect(byRef['node/8']).toMatchObject({ name: '己', lines: ['hs'] });
   expect(stations.map((s) => s.osm)).toEqual([
     'node/1',
     'node/3',
     'node/4',
     'node/5',
+    'node/8',
   ]);
 });
 
@@ -173,8 +176,14 @@ test('writes one feature per text line', () => {
   };
   expect(parsed.features[0]?.geometry.type).toBe('LineString');
   expect(
-    releaseMeta(release, { source: 's', sha256: 'x' }).counts,
-  ).toMatchObject({ lines: 2, stations: 4, endpoints: 4 });
+    releaseMeta(release, [
+      {
+        id: 's',
+        sha256: 'x',
+        header: { requiredFeatures: [], optionalFeatures: [] },
+      },
+    ]).counts,
+  ).toMatchObject({ lines: 2, stations: 5, endpoints: 4 });
 });
 
 test('projects a station onto the inside of a track edge', () => {

@@ -1,5 +1,6 @@
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import type { ExtractSource } from '@railprint/osm';
 import type { Release, ReleaseLine, ReleaseStation } from './build.ts';
 
 export const RELEASE_FILES = {
@@ -10,10 +11,12 @@ export const RELEASE_FILES = {
 
 export interface ReleaseMeta {
   osm: {
-    source: string;
-    sha256: string;
-    timestamp?: string;
-    sequence?: number;
+    sources: {
+      id: string;
+      sha256: string;
+      timestamp?: string;
+      sequence?: number;
+    }[];
   };
   attribution: string;
   license: string;
@@ -52,11 +55,22 @@ export function stationFeature(station: ReleaseStation): object {
 
 export function releaseMeta(
   release: Release,
-  osm: ReleaseMeta['osm'],
+  sources: ExtractSource[],
 ): ReleaseMeta {
   const lengthKm = release.lines.reduce((sum, l) => sum + l.lengthKm, 0);
   return {
-    osm,
+    osm: {
+      sources: sources.map((source) => ({
+        id: source.id,
+        sha256: source.sha256,
+        ...(source.header.replicationTimestamp
+          ? { timestamp: source.header.replicationTimestamp }
+          : {}),
+        ...(source.header.replicationSequenceNumber !== undefined
+          ? { sequence: source.header.replicationSequenceNumber }
+          : {}),
+      })),
+    },
     attribution: '© OpenStreetMap contributors',
     license: 'ODbL-1.0',
     counts: {

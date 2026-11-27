@@ -247,8 +247,9 @@ export function buildRelease(
   // members, which is the most reliable signal: geometry alone cannot tell a
   // hub whose platforms serve a line from a station the line merely passes.
   //   1. members of the line's relations within MEMBER_RADIUS_M of its path;
-  //   2. place nodes lying on the path itself;
-  //   3. only for lines whose relations list no stations: places reaching the
+  //   2. places explicitly tagged with the line's name within the same radius;
+  //   3. place nodes lying on the path itself;
+  //   4. only for lines whose relations list no stations: places reaching the
   //      path along the track (see reachesLines).
   const trackIndex = new TrackNodeIndex(network);
   const mainTrack = (way: number) => !(network.wayFlags[way]! & WayFlag.Minor);
@@ -271,14 +272,25 @@ export function buildRelease(
     return near;
   };
 
+  const placesByNetwork = new Map<string, RailPlace[]>();
+  for (const place of network.places) {
+    for (const name of place.networks) {
+      const places = placesByNetwork.get(name) ?? [];
+      places.push(place);
+      placesByNetwork.set(name, places);
+    }
+  }
   const withoutMembers = new Set<number>();
   catalog.lines.forEach((line, index) => {
     const members = (line.osm!.relations ?? []).flatMap((pin) => [
       ...(relationById.get(pin.id)?.places ?? []),
     ]);
     if (!members.length) withoutMembers.add(index);
-    for (const p of members) {
-      const place = network.places[p]!;
+    const tagged = placesByNetwork.get(line.name) ?? [];
+    for (const place of [
+      ...members.map((p) => network.places[p]!),
+      ...tagged,
+    ]) {
       if (linesNear(place.lon, place.lat, MEMBER_RADIUS_M).has(index))
         add(place, index);
     }

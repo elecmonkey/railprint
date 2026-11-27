@@ -11,8 +11,8 @@ import { releaseMeta, writeRelease } from './write.ts';
 const USAGE = `Usage: railprint-release
 
 Build data/release/ (lines.geojson, stations.geojson, meta.json) from the
-confirmed catalog, and characters.txt with every Chinese character the site
-shows. Every catalog line must be confirmed.
+confirmed catalog, and characters.txt with every CJK character the site shows.
+Every catalog line must be confirmed.
 `;
 
 async function main(): Promise<number> {
@@ -35,16 +35,7 @@ async function main(): Promise<number> {
       catalog,
       paths,
     );
-    const info = releaseMeta(release, {
-      source: meta.source.id,
-      sha256: meta.source.sha256,
-      ...(meta.header.replicationTimestamp
-        ? { timestamp: meta.header.replicationTimestamp }
-        : {}),
-      ...(meta.header.replicationSequenceNumber !== undefined
-        ? { sequence: meta.header.replicationSequenceNumber }
-        : {}),
-    });
+    const info = releaseMeta(release, meta.sources);
     await writeRelease(layout.release, release, info);
     const { lines, stations, endpoints, lengthKm } = info.counts;
     console.log(

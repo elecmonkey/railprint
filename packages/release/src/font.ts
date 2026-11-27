@@ -2,14 +2,16 @@ import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 /**
- * Every Chinese character the site shows, written to data/release/ for
+ * Every CJK character the site shows, written to data/release/ for
  * `@railprint/font`, which cuts the site's font down to them.
  */
 export const CHARACTERS_FILE = 'characters.txt';
 
-/** CJK characters and punctuation; everything else is drawn in Geist. */
+/** CJK characters, kana and punctuation; everything else is drawn in Geist. */
 const CJK_RANGES: [number, number][] = [
   [0x3000, 0x303f], // punctuation
+  [0x3040, 0x30ff], // hiragana and katakana
+  [0x31f0, 0x31ff], // katakana phonetic extensions
   [0x3400, 0x9fff], // ideographs
   [0xff00, 0xffef], // full-width forms
 ];

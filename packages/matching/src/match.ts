@@ -238,6 +238,7 @@ export class Matcher {
       railway: 'track',
       names: [parseEndpoint(text).name],
       oldNames: [],
+      networks: [],
       lon: this.network.lon[n]!,
       lat: this.network.lat[n]!,
       trackNode: n,

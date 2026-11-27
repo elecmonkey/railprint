@@ -1,17 +1,19 @@
 import type { Catalog } from '@railprint/catalog';
-import type { PbfHeader } from '@railprint/osm';
+import type { ExtractSource } from '@railprint/osm';
 import type { LineMatch, MatchStatus } from './match.ts';
 
 export interface MatchReport {
   generatedAt: string;
-  osm: { source: string; sha256: string; timestamp?: string };
+  osm: {
+    sources: { id: string; sha256: string; timestamp?: string }[];
+  };
   counts: Record<MatchStatus, number>;
   lines: LineMatch[];
 }
 
 export function buildReport(
   lines: LineMatch[],
-  osm: { source: string; sha256: string; header: PbfHeader },
+  sources: ExtractSource[],
 ): MatchReport {
   const counts: Record<MatchStatus, number> = {
     confirmed: 0,
@@ -23,11 +25,13 @@ export function buildReport(
   return {
     generatedAt: new Date().toISOString(),
     osm: {
-      source: osm.source,
-      sha256: osm.sha256,
-      ...(osm.header.replicationTimestamp
-        ? { timestamp: osm.header.replicationTimestamp }
-        : {}),
+      sources: sources.map((source) => ({
+        id: source.id,
+        sha256: source.sha256,
+        ...(source.header.replicationTimestamp
+          ? { timestamp: source.header.replicationTimestamp }
+          : {}),
+      })),
     },
     counts,
     lines,
@@ -64,7 +68,7 @@ export function renderMarkdown(report: MatchReport, catalog: Catalog): string {
   const out: string[] = [
     '# 线路匹配报告',
     '',
-    `OSM 快照 ${report.osm.timestamp ?? report.osm.sha256.slice(0, 12)}，生成于 ${report.generatedAt}。`,
+    `OSM 快照 ${report.osm.sources.map((source) => `${source.id} ${source.timestamp ?? source.sha256.slice(0, 12)}`).join(' + ')}，生成于 ${report.generatedAt}。`,
     '',
     `已确认 ${report.counts.confirmed}，通过 ${report.counts.ok}，待核对 ${report.counts.review}，失败 ${report.counts.failed}，共 ${report.lines.length} 条。`,
     '',

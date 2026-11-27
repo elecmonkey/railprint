@@ -13,7 +13,7 @@ import releaseMeta from '../../../../data/release/meta.json';
 import stationsUrl from '../../../../data/release/stations.geojson?url';
 
 export interface ReleaseMeta {
-  osm: { timestamp?: string };
+  osm: { sources: { timestamp?: string }[] };
   attribution: string;
   counts: { lines: number; stations: number; lengthKm: number };
   /** Size of each data file in bytes; older releases lack it. */

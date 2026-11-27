@@ -51,8 +51,7 @@
         "attribution": "© OpenStreetMap contributors",
         "url": "https://www.openstreetmap.org/copyright"
       },
-      "optional": true,
-      "notes": "Reserved for a future JR layer."
+      "notes": "Railway infrastructure, stations and train routes for the JR layer. 'latest' moves daily; the lock records the snapshot actually used."
     },
     {
       "id": "osm-land-polygons-simplified",

@@ -29,10 +29,13 @@ test('builds the track graph from rail ways only', () => {
 
 test('collects places, skipping urban transit stations', () => {
   const names = net.places.map((p) => p.names[0]);
-  expect(names).toEqual(['甲', '乙线路所', '丙']);
+  expect(names).toEqual(['甲', '乙线路所', '丙', '己']);
   const bing = net.places.find((p) => p.names[0] === '丙')!;
   expect(bing.oldNames).toEqual(['丁']);
   expect(bing.trackNode).toBe(nodeIndexOf(net, 5));
+  expect(net.places.find((p) => p.names[0] === '己')!.networks).toEqual([
+    '甲丙高铁',
+  ]);
 });
 
 test('maps relation members to track way indices', () => {

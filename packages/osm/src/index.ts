@@ -12,6 +12,7 @@ export {
 } from './pbf.ts';
 export {
   applyChanges,
+  merge,
   OsmiumError,
   osmiumVersion,
   tagsFilter,
@@ -30,6 +31,7 @@ export {
   RAIL_FILTER,
   readExtractMeta,
   type ExtractMeta,
+  type ExtractSource,
 } from './extract.ts';
 export {
   RAIL_EXTRACT,

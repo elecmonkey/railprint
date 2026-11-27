@@ -35,7 +35,7 @@ test('reads nodes, ways and relations from a PBF file', async () => {
     way: (w) => ways.push(w),
     relation: (r) => relations.push(r),
   });
-  expect(summary).toMatchObject({ nodes: 7, ways: 3, relations: 2 });
+  expect(summary).toMatchObject({ nodes: 8, ways: 3, relations: 2 });
   expect(nodes[0]).toEqual({ id: 1, lon: 100, lat: 30, name: '甲' });
   expect(nodes[2]).toMatchObject({ id: 3, lon: 100.02, name: '乙线路所' });
   expect(nodes[1]?.name).toBeUndefined();

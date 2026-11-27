@@ -58,12 +58,12 @@ Rebuild everything derived from an updated source and commit the lock with it.
 
 Everything in `cache/` is rebuilt from `sources/` and can be deleted at any time.
 
-| Path                              | Built by               | Contents                                                                                                    |
-| --------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `cache/osm/china-rail.osm.pbf`    | `pnpm osm extract`     | Railway objects of the China extract (osmium `tags-filter`), with a `.meta.json` naming the source snapshot |
-| `cache/matching/report.{json,md}` | `pnpm match`           | Catalog ↔ OSM matching results for review                                                                   |
-| `cache/export/*`                  | `pnpm export`          | Flat image of the whole network                                                                             |
-| `cache/font/`                     | `pnpm font`, web build | Noto Sans SC cut down to `release/characters.txt`, and its licence                                          |
+| Path                              | Built by               | Contents                                                                                                                             |
+| --------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `cache/osm/rail.osm.pbf`          | `pnpm osm extract`     | Railway objects of the China and Japan extracts (osmium `tags-filter` and `merge`), with a `.meta.json` naming every source snapshot |
+| `cache/matching/report.{json,md}` | `pnpm match`           | Catalog ↔ OSM matching results for review                                                                                            |
+| `cache/export/*`                  | `pnpm export`          | Flat image of the whole network                                                                                                      |
+| `cache/font/`                     | `pnpm font`, web build | Noto Sans SC cut down to `release/characters.txt`, and its licence                                                                   |
 
 `pnpm match` refuses to run on an extract built from a different snapshot than the one in the lock.
 
@@ -79,10 +79,10 @@ See [catalog/README.md](catalog/README.md).
 | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `release/lines.geojson`    | One LineString per catalog line along its confirmed path: id, name, category, endpoint names, length, high-speed share, relations             |
 | `release/stations.geojson` | Stations and junctions on the lines: name (catalog name for endpoints, `<name>` for junctions), OSM object, kind, endpoint flag, lines served |
-| `release/meta.json`        | OSM snapshot, attribution and counts                                                                                                          |
-| `release/characters.txt`   | Every Chinese character the release and the web app show; the web build cuts the font down to them                                            |
+| `release/meta.json`        | OSM source snapshots, attribution and counts                                                                                                  |
+| `release/characters.txt`   | Every CJK character the release and the web app show; the web build cuts the font down to them                                                |
 
-A station belongs to a line when it is a member of one of the line's relations near its path, or its node lies on the path. For lines whose relations list no stations, places connected to the path along main track within 1 km count as well. Coordinates have 6 decimals; each feature is one line of text.
+A station belongs to a line when it is a member of one of the line's relations near its path, explicitly tagged with the line's `network` (or Japanese `KSJ2:LIN`) name near its path, or its node lies on the path. For lines whose relations list no stations, places connected to the path along main track within 1 km count as well. Coordinates have 6 decimals; each feature is one line of text.
 
 ## Licences
 

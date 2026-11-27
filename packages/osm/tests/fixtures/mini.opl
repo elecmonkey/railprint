@@ -5,6 +5,7 @@ n4 v1 x100.03 y30
 n5 v1 x100.04 y30 Trailway=station,name=丙,old_name=丁
 n6 v1 x100.02 y30.005
 n7 v1 x100.04 y30.002 Trailway=station,station=subway,name=丙
+n8 v1 x100.02 y30.01 Trailway=station,name=己,network=甲丙高铁
 w10 v1 Trailway=rail,highspeed=yes Nn1,n2,n3
 w11 v1 Trailway=rail,usage=main Nn3,n4,n5
 w12 v1 Trailway=rail,service=siding Nn2,n6,n4

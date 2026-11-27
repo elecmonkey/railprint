@@ -19,7 +19,7 @@ const USAGE = `Usage: railprint-osm <command>
 
 Commands:
   update [id]   Apply replication changes to an OSM source (default osm-china)
-  extract       Build data/cache/osm/china-rail.osm.pbf from the China extract
+  extract       Merge the China and Japan extracts into data/cache/osm/rail.osm.pbf
   info <file>   Print the header and element counts of a PBF file
 `;
 
@@ -37,30 +37,34 @@ async function main(): Promise<number> {
 
   if (command === 'extract') {
     const manifest = await loadManifest(layout.sourcesManifest);
-    const [source] = selectSources(manifest, [RAIL_EXTRACT.sourceId]);
+    const sources = selectSources(manifest, [...RAIL_EXTRACT.sourceIds]);
     const lock = await readLock(layout.sourcesLock);
-    const status = await sourceStatus(source!, layout.sources, lock);
-    if (status.state !== 'ok') {
-      console.error(
-        `${source!.id} is ${status.state}; run \`pnpm sources fetch ${source!.id}\``,
-      );
-      return 1;
+    const inputs = [];
+    for (const source of sources) {
+      const status = await sourceStatus(source, layout.sources, lock);
+      if (status.state !== 'ok') {
+        console.error(
+          `${source.id} is ${status.state}; run \`pnpm sources fetch ${source.id}\``,
+        );
+        return 1;
+      }
+      inputs.push({
+        path: join(layout.sources, source.path),
+        source: { id: source.id, sha256: status.entry.sha256 },
+      });
     }
     const started = Date.now();
     const output = railExtractPath(layout);
-    const meta = await extractRail(join(layout.sources, source!.path), output, {
-      id: source!.id,
-      sha256: status.entry.sha256,
-    });
+    const meta = await extractRail(inputs, output);
     console.log(
       `${output}: ${meta.counts.nodes} nodes, ${meta.counts.ways} ways, ${meta.counts.relations} relations ` +
-        `(OSM ${meta.header.replicationTimestamp ?? 'unknown'}, ${((Date.now() - started) / 1000).toFixed(0)} s)`,
+        `(${meta.sources.map((source) => source.id).join(' + ')}, ${((Date.now() - started) / 1000).toFixed(0)} s)`,
     );
     return 0;
   }
 
   if (command === 'update') {
-    const id = args[0] ?? RAIL_EXTRACT.sourceId;
+    const id = args[0] ?? RAIL_EXTRACT.sourceIds[0];
     const manifest = await loadManifest(layout.sourcesManifest);
     const [source] = selectSources(manifest, [id]);
     const destination = join(layout.sources, source!.path);

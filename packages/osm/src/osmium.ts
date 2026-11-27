@@ -84,6 +84,14 @@ export async function tagsFilter(
   ]);
 }
 
+/** Merge sorted OSM files into one file sorted by object type then id. */
+export async function merge(
+  inputs: readonly string[],
+  output: string,
+): Promise<void> {
+  await run(['merge', ...inputs, '-o', output, '--overwrite', '--no-progress']);
+}
+
 /**
  * `osmium apply-changes`: apply OSM change files to `input`, writing `output`
  * with the given header options.

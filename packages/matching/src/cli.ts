@@ -158,11 +158,7 @@ async function main(): Promise<number> {
     return 0;
   }
 
-  const report = buildReport(results, {
-    source: meta.source.id,
-    sha256: meta.source.sha256,
-    header: meta.header,
-  });
+  const report = buildReport(results, meta.sources);
   const dir = join(layout.cache, 'matching');
   await mkdir(dir, { recursive: true });
   await writeFile(

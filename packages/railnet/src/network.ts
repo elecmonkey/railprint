@@ -57,6 +57,8 @@ export interface RailPlace {
   names: string[];
   /** Former names (`old_name`). */
   oldNames: string[];
+  /** Line names explicitly assigned to this place in OSM. */
+  networks: string[];
   lon: number;
   lat: number;
   /** Node index when the place is a node lying on the track graph. */
@@ -120,6 +122,17 @@ function oldNamesOf(tags: Tags): string[] {
       (tags.old_name ?? '')
         .split(';')
         .map((n) => n.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+function networksOf(tags: Tags): string[] {
+  return [
+    ...new Set(
+      [tags.network, tags['KSJ2:LIN']]
+        .flatMap((value) => value?.split(';') ?? [])
+        .map((name) => name.trim())
         .filter(Boolean),
     ),
   ];
@@ -259,6 +272,7 @@ export async function loadRailNetwork(path: string): Promise<RailNetwork> {
       railway: tags.railway!,
       names: namesOf(tags),
       oldNames: oldNamesOf(tags),
+      networks: networksOf(tags),
       lon: lons[n]!,
       lat: lats[n]!,
       ...(onTrack ? { trackNode: n } : {}),
@@ -281,6 +295,7 @@ export async function loadRailNetwork(path: string): Promise<RailNetwork> {
       railway: tags.railway!,
       names: namesOf(tags),
       oldNames: oldNamesOf(tags),
+      networks: networksOf(tags),
       lon: sumLon / count,
       lat: sumLat / count,
     });
