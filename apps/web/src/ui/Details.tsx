@@ -31,7 +31,7 @@ export function Details(props: Props) {
   const line = selection.line ? lines.get(selection.line) : undefined;
   if (!station && !line) return null;
   return (
-    <aside className={styles.panel} aria-label="详情">
+    <aside className={styles.panel} aria-label="详情" data-covers-map>
       <button
         type="button"
         className={styles.close}

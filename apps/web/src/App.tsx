@@ -1,17 +1,15 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   useSyncExternalStore,
 } from 'react';
 import {
-  clampZoom,
   dataPoints,
   fitPoints,
-  fitView,
-  type Bounds,
   type Padding,
   type Highlight,
   type Hit,
@@ -22,7 +20,14 @@ import {
 import { cssVariables, themes } from '@railprint/style';
 import { useBasemap } from './data/useBasemap';
 import { useRelease } from './data/useRelease';
-import { panView, zoomView } from './map/interaction';
+import {
+  blendView,
+  centerView,
+  clearArea,
+  revealView,
+  type Area,
+} from './map/camera';
+import { zoomView } from './map/interaction';
 import { MapCanvas } from './map/MapCanvas';
 import {
   readHash,
@@ -53,12 +58,48 @@ function subscribeToPreferredTheme(onChange: () => void) {
 /** Closest zoom when focusing a line or station, in pixels per degree. */
 const FOCUS_ZOOM = { line: 1200, station: 400 } as const;
 
+/** Narrowest window width that is not laid out as a phone. */
+const NARROW = 600;
+
 /**
- * Room the detail panel takes, with its margin: a column on the right, or
- * below `narrow` window width a sheet over part of the bottom (see
- * Details.module.css).
+ * Room kept between what the camera brings into view and the edges of the
+ * clear part of the map: a line, or a station with its label.
  */
-const PANEL = { width: 332, narrow: 600, sheet: 0.45 } as const;
+const INSET = { line: 24, station: 56 } as const;
+
+/** Length of a camera move, in milliseconds. */
+const FLIGHT = 350;
+
+/** Marks the panels and cards over the map, which the camera keeps clear of. */
+const COVER = 'data-covers-map';
+
+/**
+ * Where the camera goes after a selection: `reveal` only moves if the
+ * points are hidden, `line` and `station` centre them.
+ */
+type Focus =
+  | { mode: 'reveal'; points: [number, number][]; inset: number }
+  | { mode: 'line'; points: [number, number][] }
+  | { mode: 'station'; point: [number, number] };
+
+const lineFocus = (line: RenderLine): Focus => ({
+  mode: 'line',
+  points: line.levels[0]!,
+});
+
+const stationFocus = (station: RenderStation): Focus => ({
+  mode: 'station',
+  point: station.coordinates,
+});
+
+const revealStation = (station: RenderStation): Focus => ({
+  mode: 'reveal',
+  points: [station.coordinates],
+  inset: INSET.station,
+});
+
+const ease = (t: number) =>
+  t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
 
 /**
  * Room the overview leaves around the network: clear of the title card and
@@ -66,20 +107,9 @@ const PANEL = { width: 332, narrow: 600, sheet: 0.45 } as const;
  * below (see TitleCard.module.css and App.module.css).
  */
 function overviewPadding(width: number): Padding {
-  return width > PANEL.narrow
+  return width > NARROW
     ? { top: 96, right: 48, bottom: 48, left: 48 }
     : { top: 72, right: 24, bottom: 120, left: 24 };
-}
-
-function lineBounds(line: RenderLine): Bounds {
-  const bounds: Bounds = [Infinity, Infinity, -Infinity, -Infinity];
-  for (const [lon, lat] of line.levels[0]!) {
-    bounds[0] = Math.min(bounds[0], lon);
-    bounds[1] = Math.min(bounds[1], lat);
-    bounds[2] = Math.max(bounds[2], lon);
-    bounds[3] = Math.max(bounds[3], lat);
-  }
-  return bounds;
 }
 
 export function App() {
@@ -101,6 +131,40 @@ export function App() {
     setView(next);
   }, []);
   const size = useRef<{ width: number; height: number }>(undefined);
+  const latest = useRef(view);
+  latest.current = view;
+  const flight = useRef(0);
+  const land = useCallback(() => cancelAnimationFrame(flight.current), []);
+  const flyTo = useCallback(
+    (target: View) => {
+      cancelAnimationFrame(flight.current);
+      const from = latest.current;
+      if (
+        !from ||
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      ) {
+        moveView(target);
+        return;
+      }
+      const start = performance.now();
+      const step = (now: number) => {
+        const t = Math.min(1, (now - start) / FLIGHT);
+        moveView(t < 1 ? blendView(from, target, ease(t)) : target);
+        if (t < 1) flight.current = requestAnimationFrame(step);
+      };
+      flight.current = requestAnimationFrame(step);
+    },
+    [moveView],
+  );
+  // The reader's own moves take over from the camera.
+  const steer = useCallback(
+    (next: View) => {
+      land();
+      moveView(next);
+    },
+    [land, moveView],
+  );
+  const [focus, setFocus] = useState<Focus>();
   const [selection, setSelection] = useState<Selection>(() =>
     readHash(window.location.hash),
   );
@@ -141,6 +205,57 @@ export function App() {
 
   const select = useCallback((next: Selection) => setSelection(next), []);
 
+  // A shared link opens on its line or station.
+  const opened = useRef(false);
+  useEffect(() => {
+    if (opened.current || release.status !== 'ready' || !view) return;
+    opened.current = true;
+    const line = known.line ? index.lines.get(known.line) : undefined;
+    const station = known.station
+      ? index.stations.get(known.station)
+      : undefined;
+    if (line) setFocus(lineFocus(line));
+    else if (station) setFocus(stationFocus(station));
+  }, [release.status, view, known, index]);
+
+  // Runs after the panel for the selection is laid out, so it can be measured.
+  const hasView = view !== undefined;
+  useLayoutEffect(() => {
+    const s = size.current;
+    const current = latest.current;
+    if (!focus || !s || !current) return;
+    setFocus(undefined);
+    const { width, height } = s;
+    const covered = [...document.querySelectorAll(`[${COVER}]`)].map(
+      (element): Area => element.getBoundingClientRect(),
+    );
+    const area = (inset: number) => clearArea(width, height, covered, inset);
+    if (focus.mode === 'reveal') {
+      const next = revealView(
+        current,
+        focus.points,
+        width,
+        height,
+        area(focus.inset),
+      );
+      if (next !== current) flyTo(next);
+    } else if (focus.mode === 'line') {
+      flyTo(
+        centerView(focus.points, width, height, area(INSET.line), {
+          max: FOCUS_ZOOM.line,
+        }),
+      );
+    } else {
+      const zoom = Math.max(current.pixelsPerDegree, FOCUS_ZOOM.station);
+      flyTo(
+        centerView([focus.point], width, height, area(INSET.station), {
+          min: zoom,
+          max: zoom,
+        }),
+      );
+    }
+  }, [focus, hasView, flyTo]);
+
   // The selection is in the URL, so a link opens the same line or station.
   useEffect(() => {
     if (release.status !== 'ready') return;
@@ -161,37 +276,25 @@ export function App() {
     return () => window.removeEventListener('keydown', onKey);
   }, [select]);
 
-  const onPick = (hit: Hit) => select(selectFromHit(known, hit));
-
-  const focusLine = (line: RenderLine) => {
-    const s = size.current;
-    if (!s || !view) return;
-    // Fit the line into the part of the map the panel leaves free.
-    const wide = s.width > PANEL.narrow;
-    const coveredX = wide ? PANEL.width : 0;
-    const coveredY = wide ? 0 : Math.round(s.height * PANEL.sheet) + 8;
-    const fitted = fitView(
-      s.width - coveredX,
-      s.height - coveredY,
-      lineBounds(line),
-      wide ? 64 : 32,
-    );
-    const zoomed = {
-      ...fitted,
-      pixelsPerDegree: Math.min(fitted.pixelsPerDegree, FOCUS_ZOOM.line),
-    };
-    moveView(panView(zoomed, -coveredX / 2, -coveredY / 2));
+  // On the map, keep what was clicked in view without moving more than needed.
+  const onPick = (hit: Hit) => {
+    const next = selectFromHit(known, hit);
+    select(next);
+    const station = next.station && index.stations.get(next.station);
+    const line = next.line && index.lines.get(next.line);
+    if (station) setFocus(revealStation(station));
+    else if (line)
+      setFocus({ mode: 'reveal', points: line.levels[0]!, inset: INSET.line });
   };
 
-  const focusStation = (station: RenderStation) => {
-    if (!view) return;
-    moveView({
-      ...view,
-      center: station.coordinates,
-      pixelsPerDegree: clampZoom(
-        Math.max(view.pixelsPerDegree, FOCUS_ZOOM.station),
-      ),
-    });
+  // From the panel, a line comes to the centre; a stop along the line is
+  // only kept in view, so reading down the list does not jump the map.
+  const onPanelSelect = (next: Selection) => {
+    select(next);
+    const station = next.station && index.stations.get(next.station);
+    const line = next.line && index.lines.get(next.line);
+    if (station) setFocus(revealStation(station));
+    else if (line) setFocus(lineFocus(line));
   };
 
   useEffect(() => {
@@ -215,7 +318,7 @@ export function App() {
   const reset = () => {
     if (size.current) {
       const { width, height } = size.current;
-      moveView(fitPoints(width, height, extent, overviewPadding(width)));
+      flyTo(fitPoints(width, height, extent, overviewPadding(width)));
     }
   };
 
@@ -238,7 +341,7 @@ export function App() {
             theme={theme}
             view={view}
             onSize={onSize}
-            onViewChange={moveView}
+            onViewChange={steer}
             highlight={highlight}
             onHover={setHover}
             onPick={onPick}
@@ -257,9 +360,9 @@ export function App() {
             selection={known}
             lines={index.lines}
             stations={index.stations}
-            onSelect={select}
-            onFocusLine={focusLine}
-            onFocusStation={focusStation}
+            onSelect={onPanelSelect}
+            onFocusLine={(line) => setFocus(lineFocus(line))}
+            onFocusStation={(station) => setFocus(stationFocus(station))}
             onClose={() => select({})}
           />
           {terrain === 'mismatch' || terrain === 'failed' ? (
@@ -288,6 +391,7 @@ export function App() {
               onTheme={setThemeOverride}
               onZoom={(factor) => {
                 const s = size.current;
+                land();
                 if (s)
                   moveView(
                     zoomView(

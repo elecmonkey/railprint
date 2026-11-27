@@ -32,7 +32,12 @@ function Button({
 export function Toolbar({ theme, onTheme, onZoom, onReset }: Props) {
   const dark = theme === 'dark';
   return (
-    <div className={styles.toolbar} role="toolbar" aria-label="地图">
+    <div
+      className={styles.toolbar}
+      role="toolbar"
+      aria-label="地图"
+      data-covers-map
+    >
       <Button label="放大" onClick={() => onZoom(ZOOM)}>
         <path d="M8 3.5v9M3.5 8h9" />
       </Button>

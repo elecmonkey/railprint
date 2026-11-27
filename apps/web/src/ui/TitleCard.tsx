@@ -38,7 +38,7 @@ export function TitleCard({ counts }: Props) {
     [counts.lengthKm.toLocaleString(), 'km'],
   ];
   return (
-    <header className={styles.card}>
+    <header className={styles.card} data-covers-map>
       <Mark />
       <div className={styles.body}>
         <h1>
