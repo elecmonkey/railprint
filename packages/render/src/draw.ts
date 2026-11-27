@@ -39,6 +39,7 @@ export type DrawContext = Pick<
   | 'strokeStyle'
   | 'lineWidth'
   | 'globalAlpha'
+  | 'globalCompositeOperation'
   | 'lineJoin'
   | 'lineCap'
   | 'font'
@@ -86,7 +87,8 @@ export interface DrawOptions {
 
 /** What the reader is pointing at or has selected; ids from the release. */
 export interface Highlight {
-  /** Selected line: drawn on top with its stations, other lines fade. */
+  /** Selected line: drawn on top with its stations, other lines and their
+   * stations fade. */
   line?: string;
   /** Line under the pointer. */
   hover?: string;
@@ -114,11 +116,19 @@ export const ZOOM = {
   lineStationLabels: 60,
 } as const;
 
-/** Opacity of the other lines while one is selected. */
+/** Opacity of the other lines, and their stations, while one is selected. */
 const FADED = 0.3;
 
 /** Opacity of the other stations and names while one is selected. */
 const STATION_FADED = 0.55;
+
+/** Opacity of a station's symbol and name. */
+function stationAlpha(s: RenderStation, highlight: Highlight): number {
+  if (s.properties.osm === highlight.station) return 1;
+  if (highlight.line && !s.properties.lines.includes(highlight.line))
+    return FADED;
+  return highlight.station ? STATION_FADED : 1;
+}
 
 /** Symbol radius in CSS pixels at full size. */
 const RADIUS = { endpoint: 2.8, intermediate: 1.8 } as const;
@@ -260,6 +270,88 @@ export function draw({
     ctx.globalAlpha = 1;
   }
 
+  // Stations. All line endpoints are treated alike: names appear first,
+  // written on the station; symbols follow when zoomed in and the names move
+  // beside them. Junctions (线路所) get a symbol but no name. They are laid
+  // out before the lines are drawn, so faded ones can be cut out of them.
+  const visible = (s: RenderStation) =>
+    flat !== undefined ||
+    cosAngle(unitVector(s.coordinates), centre) > Math.sin(0.01);
+  const placed: {
+    x: number;
+    y: number;
+    s: RenderStation;
+    symbol: boolean;
+    label: boolean;
+  }[] = [];
+  for (const s of places ? data.stations : []) {
+    const { symbol, label } = stationDisplay(s, ppd, stations, highlight);
+    if ((!symbol && !label) || !visible(s)) continue;
+    const p = projection(s.coordinates);
+    if (
+      !p ||
+      p[0] < -20 ||
+      p[1] < -20 ||
+      p[0] > width + 20 ||
+      p[1] > height + 20
+    )
+      continue;
+    placed.push({ x: p[0], y: p[1], s, symbol, label });
+  }
+  // When names collide, the selection keeps its names first, then stations
+  // where more lines meet.
+  const priority = (s: RenderStation) =>
+    (s.properties.osm === highlight.station ? 2000 : 0) +
+    (highlight.line && s.properties.lines.includes(highlight.line) ? 1000 : 0) +
+    s.properties.lines.length;
+  placed.sort((a, b) => priority(b.s) - priority(a.s));
+
+  const symbolScale = Math.min(1.3, Math.max(0.6, Math.sqrt(ppd / 120)));
+  const radius = (s: RenderStation) =>
+    (s.properties.endpoint ? RADIUS.endpoint : RADIUS.intermediate) *
+    symbolScale;
+  const shape = (s: RenderStation, x: number, y: number, r: number) => {
+    ctx.beginPath();
+    if (s.properties.kind === 'junction') {
+      ctx.moveTo(x - r, y);
+      ctx.lineTo(x, y - r);
+      ctx.lineTo(x + r, y);
+      ctx.lineTo(x, y + r);
+      ctx.closePath();
+    } else {
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+    }
+  };
+
+  // Names with greedy collision avoidance.
+  const size = LABEL_SIZE;
+  ctx.font = `500 ${size}px ${theme.font}`;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  const boxes: [number, number, number, number][] = [];
+  const names: { s: RenderStation; text: string; x: number; y: number }[] = [];
+  for (const { x, y, s, symbol, label } of placed) {
+    if (!label) continue;
+    const text = s.properties.name;
+    const w = ctx.measureText(text).width;
+    // Beside the symbol, or centred on the station when there is none.
+    const left = symbol ? x + 6 : x - w / 2;
+    const box: [number, number, number, number] = [
+      left - 1,
+      y - size / 2 - 1,
+      left + w + 1,
+      y + size / 2 + 1,
+    ];
+    if (
+      boxes.some(
+        (b) => b[0] < box[2] && box[0] < b[2] && b[1] < box[3] && box[1] < b[3],
+      )
+    )
+      continue;
+    boxes.push(box);
+    names.push({ s, text, x: left, y });
+  }
+
   // Lines: one path per category, drawn bottom to top.
   ctx.lineJoin = 'round';
   ctx.lineCap = 'round';
@@ -277,6 +369,43 @@ export function draw({
     ctx.stroke();
   }
   ctx.globalAlpha = 1;
+
+  // A faded station still hides the lines under it, as a solid one does:
+  // cut its symbol and name out of what is drawn so far, refill the cut
+  // with the sea when there is no terrain layer to show through, then draw
+  // it see-through. Export draws terrain on this canvas, but no stations.
+  const faded = (s: RenderStation) => stationAlpha(s, highlight) < 1;
+  if (placed.some((p) => faded(p.s))) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineWidth = 1.2;
+    for (const { x, y, s, symbol } of placed) {
+      if (!symbol || !faded(s)) continue;
+      shape(s, x, y, radius(s));
+      ctx.fill();
+      ctx.stroke();
+    }
+    ctx.lineWidth = 3;
+    for (const { s, text, x, y } of names) {
+      if (!faded(s)) continue;
+      ctx.strokeText(text, x, y);
+      ctx.fillText(text, x, y);
+    }
+    if (!terrain) {
+      ctx.globalCompositeOperation = 'destination-over';
+      if (flat) {
+        ctx.fillStyle = theme.background;
+        ctx.fillRect(0, 0, width, height);
+      } else {
+        ctx.beginPath();
+        path({ type: 'Sphere' });
+        ctx.fillStyle = theme.sea;
+        ctx.fill();
+      }
+    }
+    ctx.restore();
+  }
+
   const emphasise = (
     line: RenderLine | undefined,
     factor: number,
@@ -312,59 +441,10 @@ export function draw({
   emphasise(byId(highlight.line), 1.6, true);
   if (highlight.hover !== highlight.line) emphasise(byId(highlight.hover), 1.4);
 
-  // Stations. All line endpoints are treated alike: names appear first,
-  // written on the station; symbols follow when zoomed in and the names move
-  // beside them. Junctions (线路所) get a symbol but no name.
-  const visible = (s: RenderStation) =>
-    flat !== undefined ||
-    cosAngle(unitVector(s.coordinates), centre) > Math.sin(0.01);
-  const placed: {
-    x: number;
-    y: number;
-    s: RenderStation;
-    symbol: boolean;
-    label: boolean;
-  }[] = [];
-  for (const s of places ? data.stations : []) {
-    const { symbol, label } = stationDisplay(s, ppd, stations, highlight);
-    if ((!symbol && !label) || !visible(s)) continue;
-    const p = projection(s.coordinates);
-    if (
-      !p ||
-      p[0] < -20 ||
-      p[1] < -20 ||
-      p[0] > width + 20 ||
-      p[1] > height + 20
-    )
-      continue;
-    placed.push({ x: p[0], y: p[1], s, symbol, label });
-  }
-  // When names collide, the selection keeps its names first, then stations
-  // where more lines meet.
-  const priority = (s: RenderStation) =>
-    (s.properties.osm === highlight.station ? 2000 : 0) +
-    (highlight.line && s.properties.lines.includes(highlight.line) ? 1000 : 0) +
-    s.properties.lines.length;
-  placed.sort((a, b) => priority(b.s) - priority(a.s));
-
-  const symbolScale = Math.min(1.3, Math.max(0.6, Math.sqrt(ppd / 120)));
-  const shape = (s: RenderStation, x: number, y: number, r: number) => {
-    ctx.beginPath();
-    if (s.properties.kind === 'junction') {
-      ctx.moveTo(x - r, y);
-      ctx.lineTo(x, y - r);
-      ctx.lineTo(x + r, y);
-      ctx.lineTo(x, y + r);
-      ctx.closePath();
-    } else {
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-    }
-  };
   let selected: (typeof placed)[number] | undefined;
-  const others = highlight.station ? STATION_FADED : 1;
-  ctx.globalAlpha = others;
   ctx.lineWidth = 1.2;
-  for (const p of placed) {
+  // Lowest priority first, so faded symbols stay under the selection's.
+  for (const p of [...placed].reverse()) {
     if (!p.symbol) continue;
     // The selected station is drawn last, above its neighbours.
     if (p.s.properties.osm === highlight.station) {
@@ -372,10 +452,8 @@ export function draw({
       continue;
     }
     const { x, y, s } = p;
-    const r =
-      (s.properties.endpoint ? RADIUS.endpoint : RADIUS.intermediate) *
-      symbolScale;
-    shape(s, x, y, r);
+    ctx.globalAlpha = stationAlpha(s, highlight);
+    shape(s, x, y, radius(s));
     ctx.fillStyle = theme.station.fill;
     ctx.fill();
     ctx.strokeStyle = theme.station.stroke;
@@ -386,12 +464,7 @@ export function draw({
     // Like the selected line: enlarged, cased in the halo colour and set in
     // a soft glow of the selection colour.
     const { x, y, s } = selected;
-    const r = Math.max(
-      RADIUS.endpoint,
-      (s.properties.endpoint ? RADIUS.endpoint : RADIUS.intermediate) *
-        symbolScale *
-        1.6,
-    );
+    const r = Math.max(RADIUS.endpoint, radius(s) * 1.6);
     ctx.save();
     shape(s, x, y, r + 3);
     ctx.fillStyle = theme.selection;
@@ -411,42 +484,16 @@ export function draw({
     ctx.stroke();
   }
 
-  // Labels with greedy collision avoidance.
-  const size = LABEL_SIZE;
-  ctx.font = `500 ${size}px ${theme.font}`;
-  ctx.textBaseline = 'middle';
-  const boxes: [number, number, number, number][] = [];
-  let labels = 0;
-  for (const { x, y, s, symbol, label } of placed) {
-    if (!label) continue;
-    const text = s.properties.name;
-    const w = ctx.measureText(text).width;
-    // Beside the symbol, or centred on the station when there is none.
-    const left = symbol ? x + 6 : x - w / 2;
-    const box: [number, number, number, number] = [
-      left - 1,
-      y - size / 2 - 1,
-      left + w + 1,
-      y + size / 2 + 1,
-    ];
-    if (
-      boxes.some(
-        (b) => b[0] < box[2] && box[0] < b[2] && b[1] < box[3] && box[1] < b[3],
-      )
-    )
-      continue;
-    boxes.push(box);
-    ctx.globalAlpha = s.properties.osm === highlight.station ? 1 : others;
-    ctx.textAlign = 'left';
+  ctx.lineWidth = 3;
+  for (const { s, text, x, y } of names) {
+    ctx.globalAlpha = stationAlpha(s, highlight);
     ctx.strokeStyle = theme.halo;
-    ctx.lineWidth = 3;
-    ctx.strokeText(text, left, y);
+    ctx.strokeText(text, x, y);
     ctx.fillStyle = theme.text;
-    ctx.fillText(text, left, y);
-    labels++;
+    ctx.fillText(text, x, y);
   }
   ctx.globalAlpha = 1;
 
   ctx.restore();
-  return { level, stations: placed.length, labels };
+  return { level, stations: placed.length, labels: names.length };
 }
