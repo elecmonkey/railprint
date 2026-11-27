@@ -39,6 +39,8 @@ export interface Theme {
   terrain: TerrainStyle;
   water: { river: string; riverWidth: number; lakeOutline: string };
   font: string;
+  /** Fonts for local names, by language, e.g. `zh-HK` in Hong Kong forms. */
+  localFonts: Record<string, string>;
 }
 
 /** Colours and strengths the terrain shader blends; see render/src/terrain.ts. */
@@ -61,6 +63,12 @@ export interface TerrainStyle {
 // cover what it lacks.
 const FONT =
   '"Geist Variable", "Railprint SC", Arial, Helvetica, "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", system-ui, sans-serif';
+
+// Railprint HK is Noto Sans HK cut down to the Hong Kong station names.
+const LOCAL_FONTS = {
+  'zh-HK':
+    '"Geist Variable", "Railprint HK", Arial, Helvetica, "PingFang HK", "Noto Sans CJK HK", "Microsoft JhengHei", "Railprint SC", system-ui, sans-serif',
+};
 
 export const light: Theme = {
   name: 'light',
@@ -93,6 +101,7 @@ export const light: Theme = {
   },
   water: { river: '#9dbac4', riverWidth: 0.9, lakeOutline: '#9dbac4' },
   font: FONT,
+  localFonts: LOCAL_FONTS,
 };
 
 export const dark: Theme = {
@@ -126,6 +135,7 @@ export const dark: Theme = {
   },
   water: { river: '#2f4c58', riverWidth: 0.9, lakeOutline: '#2f4c58' },
   font: FONT,
+  localFonts: LOCAL_FONTS,
 };
 
 export const themes = { light, dark } as const;
@@ -143,6 +153,8 @@ export function cssVariables(theme: Theme): Record<string, string> {
     '--rp-station-fill': theme.station.fill,
     '--rp-station-stroke': theme.station.stroke,
   };
+  for (const [lang, font] of Object.entries(theme.localFonts))
+    vars[`--rp-font-${lang}`] = font;
   for (const [category, style] of Object.entries(theme.lines)) {
     vars[`--rp-line-${category}`] = style.color;
   }

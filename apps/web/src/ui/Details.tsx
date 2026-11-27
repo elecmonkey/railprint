@@ -7,6 +7,7 @@ import {
 import type { Selection } from '../map/selection';
 import { LineIcon, StationIcon } from './Icons';
 import { formatKm, fullName } from './labels';
+import { Route } from './Route';
 import styles from './Details.module.css';
 
 interface Props {
@@ -65,7 +66,7 @@ function LineDetails({
         </span>
         <h2>{p.name}</h2>
         <p className={styles.route}>
-          {p.from} — {p.to}
+          <Route line={line} />
         </p>
       </header>
       <dl className={styles.facts}>
@@ -116,9 +117,13 @@ function LineDetails({
                       ? undefined
                       : styles.muted
                   }
+                  lang={station.properties.lang}
                 >
                   {station.properties.name}
                 </span>
+                {station.properties.zh && (
+                  <span className={styles.muted}>{station.properties.zh}</span>
+                )}
               </button>
             </li>
           ))}
@@ -144,14 +149,15 @@ function StationDetails({
           className={styles.back}
           onClick={() => onSelect({ line: from.properties.id })}
         >
-          ‹ {from.properties.name} {from.properties.from}—{from.properties.to}
+          ‹ {from.properties.name} <Route line={from} dash="—" />
         </button>
       )}
       <header className={styles.header}>
         <span className={styles.icon}>
           <StationIcon station={station} />
         </span>
-        <h2>{fullName(station)}</h2>
+        <h2 lang={p.lang}>{fullName(station)}</h2>
+        {p.zh && <p className={styles.route}>{p.zh}</p>}
       </header>
       <div className={styles.actions}>
         <button type="button" onClick={() => onFocusStation(station)}>
@@ -190,7 +196,7 @@ function LineRow({ line, onClick }: { line: RenderLine; onClick: () => void }) {
         />
         <span>{p.name}</span>
         <span className={styles.muted}>
-          {p.from}—{p.to}
+          <Route line={line} dash="—" />
         </span>
       </button>
     </li>

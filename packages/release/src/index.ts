@@ -21,6 +21,8 @@ export {
 } from './write.ts';
 export {
   CHARACTERS_FILE,
+  localCharacters,
+  localCharactersFile,
   shownCharacters,
   writeCharacters,
   type ShownText,

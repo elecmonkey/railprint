@@ -5,6 +5,8 @@ Two files describe every railway section the map draws, divided the way the auth
 - `lines.json`: one record per line: name, endpoints, category, and its correspondence with OSM. Hand-maintained, except the `osm` block, which `pnpm match confirm` writes.
 - `paths.json`: the exact confirmed track path of each line, written by `pnpm match confirm`, one line of text per catalog line.
 
+A third, `stations.json`, holds the station names the author has approved, see [Station names](#station-names).
+
 Run `pnpm run catalog check` after editing.
 
 ## A line
@@ -51,6 +53,28 @@ Run `pnpm run catalog check` after editing.
 
 `id` is `<name>/<from>-<to>` with the endpoints as written (`蔡歌联络线/<K141>-歌乐山`), and validation enforces it: when a line's name or endpoints change, its id changes too, and the line's entry in `paths.json` is renamed with it.
 
+## Station names
+
+A station whose local name is not written in Simplified Chinese is listed in `stations.json` by its OSM object, with its local name and the Simplified Chinese name the author approves:
+
+```jsonc
+{
+  "version": 1,
+  "stations": {
+    "node/7919700008": {
+      "name": "香港西九龍",
+      "zh": "香港西九龙",
+      "lang": "zh-HK",
+    },
+  },
+}
+```
+
+- `name` replaces the station's OSM name; `zh` is shown under it in a smaller size.
+- `lang` picks the font for `name`: `zh-HK` is drawn in Noto Sans HK.
+- A line ending at a listed station writes the endpoint by its local name, so the name is in its id too (`广深港高铁/广州南-香港西九龍`).
+- Run `pnpm release` afterwards; it lists the characters of each language's names for its font.
+
 ## Correcting a line
 
 1. Edit `name`, `from`, `to` or `category`. To re-route, remove the `osm` block (or keep only `from`/`to` to pin endpoints) and the line's entry in `paths.json`.
@@ -64,6 +88,7 @@ Run `pnpm run catalog check` after editing.
 - endpoints parse in the notation above, and differ from each other
 - `category` is one of the three values; no unknown fields
 - `osm` references are `node/<id>` or `way/<id>`; a confirmed line has both endpoints
+- `stations.json` entries have a local name, a different Chinese name and a known `lang`; lines ending at them use the local name
 
 ## History
 

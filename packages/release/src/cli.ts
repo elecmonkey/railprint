@@ -1,6 +1,12 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util';
-import { loadCatalog, loadPaths } from '@railprint/catalog';
+import {
+  checkEndpointNames,
+  loadCatalog,
+  loadPaths,
+  loadStations,
+  STATION_LANGS,
+} from '@railprint/catalog';
 import { dataLayout } from '@railprint/layout';
 import { readExtractMeta, requireFreshRailExtract } from '@railprint/osm';
 import { loadRailNetwork } from '@railprint/railnet';
@@ -11,8 +17,9 @@ import { releaseMeta, writeRelease } from './write.ts';
 const USAGE = `Usage: railprint-release
 
 Build data/release/ (lines.geojson, stations.geojson, meta.json) from the
-confirmed catalog, and characters.txt with every Chinese character the site
-shows. Every catalog line must be confirmed.
+confirmed catalog, characters.txt with every Chinese character the site
+shows, and characters.<lang>.txt with those of local station names that have
+a font of their own. Every catalog line must be confirmed.
 `;
 
 async function main(): Promise<number> {
@@ -27,6 +34,8 @@ async function main(): Promise<number> {
   const catalog = await loadCatalog(layout.catalog);
   const ids = new Set(catalog.lines.map((l) => l.id));
   const paths = await loadPaths(layout.catalog, ids);
+  const names = await loadStations(layout.catalog);
+  checkEndpointNames(catalog, names);
   const extract = await requireFreshRailExtract(layout);
   const meta = (await readExtractMeta(extract))!;
   try {
@@ -34,6 +43,7 @@ async function main(): Promise<number> {
       await loadRailNetwork(extract),
       catalog,
       paths,
+      names,
     );
     const info = releaseMeta(release, {
       source: meta.source.id,
@@ -54,8 +64,10 @@ async function main(): Promise<number> {
       layout.root,
       layout.release,
       release,
+      STATION_LANGS,
     );
-    console.log(`characters.txt: ${characters} characters`);
+    for (const [file, count] of Object.entries(characters))
+      console.log(`${file}: ${count} characters`);
     return 0;
   } catch (error) {
     if (error instanceof ReleaseError) {

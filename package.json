@@ -4,7 +4,7 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "pnpm sources fetch noto-sans-sc noto-sans-sc-license && pnpm --filter web build",
+    "build": "pnpm sources fetch noto-sans-sc noto-sans-sc-license noto-sans-hk noto-sans-hk-license && pnpm --filter web build",
     "dev": "pnpm --filter web dev",
     "test": "pnpm -r test",
     "check": "rs check --type-check",

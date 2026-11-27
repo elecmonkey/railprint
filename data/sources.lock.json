@@ -59,6 +59,26 @@
       "lastModified": "Wed, 08 Sep 2021 06:23:11 GMT",
       "fetchedAt": "2026-11-23T11:35:45.504Z"
     },
+    "noto-sans-hk": {
+      "id": "noto-sans-hk",
+      "url": "https://github.com/google/fonts/raw/main/ofl/notosanshk/NotoSansHK%5Bwght%5D.ttf",
+      "resolvedUrl": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosanshk/NotoSansHK%5Bwght%5D.ttf",
+      "path": "fonts/NotoSansHK[wght].ttf",
+      "bytes": 11905808,
+      "sha256": "76098ee78ec234cd4f8c950742b3f766fea2f8b43d5180d901048f4fc86c6849",
+      "etag": "\"523a3d9758154cca9b2289e472a3c0fdd48aa9dc4c7e016603b1c425cf606118\"",
+      "fetchedAt": "2026-11-27T17:09:24.782Z"
+    },
+    "noto-sans-hk-license": {
+      "id": "noto-sans-hk-license",
+      "url": "https://github.com/google/fonts/raw/main/ofl/notosanshk/OFL.txt",
+      "resolvedUrl": "https://raw.githubusercontent.com/google/fonts/main/ofl/notosanshk/OFL.txt",
+      "path": "fonts/NotoSansHK-OFL.txt",
+      "bytes": 4388,
+      "sha256": "1c05c68c34f9708415aada51f17e1b0092d2cea709bf4a94cd38114f9e73d7d9",
+      "etag": "\"b7137eeea8cf569766b4475eb8f6b47f83709af2c2c4289c080466b51f3f60a5\"",
+      "fetchedAt": "2026-11-27T17:09:26.417Z"
+    },
     "noto-sans-sc": {
       "id": "noto-sans-sc",
       "url": "https://github.com/google/fonts/raw/main/ofl/notosanssc/NotoSansSC%5Bwght%5D.ttf",

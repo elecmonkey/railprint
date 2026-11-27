@@ -137,6 +137,8 @@ const RADIUS = { endpoint: 2.8, intermediate: 1.8 } as const;
 const REFERENCE_PIXELS_PER_DEGREE = 20;
 
 const LABEL_SIZE = 12;
+/** The approved Chinese name, under a local one. */
+const SUBLABEL_SIZE = 10;
 
 export function widthScale(pixelsPerDegree: number): number {
   const scale = (pixelsPerDegree / REFERENCE_PIXELS_PER_DEGREE) ** 0.35;
@@ -323,24 +325,63 @@ export function draw({
     }
   };
 
-  // Names with greedy collision avoidance.
-  const size = LABEL_SIZE;
-  ctx.font = `500 ${size}px ${theme.font}`;
+  // Names with greedy collision avoidance. A local name has its approved
+  // Chinese name in a smaller size under it.
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'left';
+  type Text = {
+    text: string;
+    font: string;
+    muted: boolean;
+    x: number;
+    y: number;
+  };
   const boxes: [number, number, number, number][] = [];
-  const names: { s: RenderStation; text: string; x: number; y: number }[] = [];
+  const names: { s: RenderStation; texts: Text[] }[] = [];
   for (const { x, y, s, symbol, label } of placed) {
     if (!label) continue;
-    const text = s.properties.name;
-    const w = ctx.measureText(text).width;
-    // Beside the symbol, or centred on the station when there is none.
-    const left = symbol ? x + 6 : x - w / 2;
+    const { name, zh, lang } = s.properties;
+    const rows = [
+      {
+        text: name,
+        font: `500 ${LABEL_SIZE}px ${(lang && theme.localFonts[lang]) || theme.font}`,
+        size: LABEL_SIZE,
+        muted: false,
+      },
+      ...(zh
+        ? [
+            {
+              text: zh,
+              font: `500 ${SUBLABEL_SIZE}px ${theme.font}`,
+              size: SUBLABEL_SIZE,
+              muted: true,
+            },
+          ]
+        : []),
+    ];
+    const height = rows.reduce((sum, r) => sum + r.size, 0) + rows.length - 1;
+    let top = y - height / 2;
+    const texts: Text[] = [];
+    for (const row of rows) {
+      ctx.font = row.font;
+      const w = ctx.measureText(row.text).width;
+      // Beside the symbol, or centred on the station when there is none.
+      const left = symbol ? x + 6 : x - w / 2;
+      texts.push({ ...row, x: left, y: top + row.size / 2 });
+      top += row.size + 1;
+    }
+    const lefts = texts.map((t) => t.x);
+    const right = Math.max(
+      ...texts.map((t) => {
+        ctx.font = t.font;
+        return t.x + ctx.measureText(t.text).width;
+      }),
+    );
     const box: [number, number, number, number] = [
-      left - 1,
-      y - size / 2 - 1,
-      left + w + 1,
-      y + size / 2 + 1,
+      Math.min(...lefts) - 1,
+      y - height / 2 - 1,
+      right + 1,
+      y + height / 2 + 1,
     ];
     if (
       boxes.some(
@@ -349,7 +390,7 @@ export function draw({
     )
       continue;
     boxes.push(box);
-    names.push({ s, text, x: left, y });
+    names.push({ s, texts });
   }
 
   // Lines: one path per category, drawn bottom to top.
@@ -386,10 +427,13 @@ export function draw({
       ctx.stroke();
     }
     ctx.lineWidth = 3;
-    for (const { s, text, x, y } of names) {
+    for (const { s, texts } of names) {
       if (!faded(s)) continue;
-      ctx.strokeText(text, x, y);
-      ctx.fillText(text, x, y);
+      for (const { text, font, x, y } of texts) {
+        ctx.font = font;
+        ctx.strokeText(text, x, y);
+        ctx.fillText(text, x, y);
+      }
     }
     if (!terrain) {
       ctx.globalCompositeOperation = 'destination-over';
@@ -485,12 +529,15 @@ export function draw({
   }
 
   ctx.lineWidth = 3;
-  for (const { s, text, x, y } of names) {
+  for (const { s, texts } of names) {
     ctx.globalAlpha = stationAlpha(s, highlight);
-    ctx.strokeStyle = theme.halo;
-    ctx.strokeText(text, x, y);
-    ctx.fillStyle = theme.text;
-    ctx.fillText(text, x, y);
+    for (const { text, font, muted, x, y } of texts) {
+      ctx.font = font;
+      ctx.strokeStyle = theme.halo;
+      ctx.strokeText(text, x, y);
+      ctx.fillStyle = muted ? theme.textMuted : theme.text;
+      ctx.fillText(text, x, y);
+    }
   }
   ctx.globalAlpha = 1;
 

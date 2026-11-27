@@ -9,7 +9,22 @@ import {
 } from '@railprint/sources';
 import subsetFont from 'subset-font';
 
-const SOURCES = { font: 'noto-sans-sc', license: 'noto-sans-sc-license' };
+/**
+ * The site's fonts: Noto Sans SC for all Chinese text, and Noto Sans HK for
+ * Hong Kong station names, each cut down to its list in data/release/.
+ */
+const FONTS = [
+  {
+    source: 'noto-sans-sc',
+    characters: 'characters.txt',
+    file: 'railprint-sc.woff2',
+  },
+  {
+    source: 'noto-sans-hk',
+    characters: 'characters.zh-HK.txt',
+    file: 'railprint-hk.woff2',
+  },
+] as const;
 
 /** Weights the web app uses (400–650), as a variable range. */
 const WEIGHTS = { min: 400, max: 700 };
@@ -22,6 +37,8 @@ export interface FontFiles {
   font: string;
   /** Its licence text, to ship next to it. */
   license: string;
+  /** The licence's name next to the site, e.g. OFL-noto-sans-sc.txt. */
+  licenseName: string;
 }
 
 async function sourcePath(layout: DataLayout, id: string): Promise<string> {
@@ -40,29 +57,37 @@ async function sourcePath(layout: DataLayout, id: string): Promise<string> {
 }
 
 /**
- * Cuts Noto Sans SC down to the characters in data/release/characters.txt
- * and writes it, with its licence, to data/cache/font/.
+ * Cuts each of the site's fonts down to its characters and writes it, with
+ * its licence, to data/cache/font/.
  */
-export async function buildFont(layout: DataLayout): Promise<FontFiles> {
-  const characters = (
-    await readFile(join(layout.release, 'characters.txt'), 'utf8')
-  ).trim();
-  const font = await subsetFont(
-    await readFile(await sourcePath(layout, SOURCES.font)),
-    characters,
-    {
-      targetFormat: 'woff2',
-      variationAxes: { wght: WEIGHTS },
-      preserveNameIds: NAME_IDS,
-    },
-  );
+export async function buildFonts(layout: DataLayout): Promise<FontFiles[]> {
   const dir = join(layout.cache, 'font');
   await mkdir(dir, { recursive: true });
-  const files: FontFiles = {
-    font: join(dir, 'railprint-sc.woff2'),
-    license: join(dir, 'OFL.txt'),
-  };
-  await writeFile(files.font, font);
-  await copyFile(await sourcePath(layout, SOURCES.license), files.license);
-  return files;
+  const built: FontFiles[] = [];
+  for (const { source, characters, file } of FONTS) {
+    const text = (
+      await readFile(join(layout.release, characters), 'utf8')
+    ).trim();
+    const font = await subsetFont(
+      await readFile(await sourcePath(layout, source)),
+      text,
+      {
+        targetFormat: 'woff2',
+        variationAxes: { wght: WEIGHTS },
+        preserveNameIds: NAME_IDS,
+      },
+    );
+    const files: FontFiles = {
+      font: join(dir, file),
+      license: join(dir, `OFL-${source}.txt`),
+      licenseName: `OFL-${source}.txt`,
+    };
+    await writeFile(files.font, font);
+    await copyFile(
+      await sourcePath(layout, `${source}-license`),
+      files.license,
+    );
+    built.push(files);
+  }
+  return built;
 }

@@ -182,6 +182,32 @@
         "url": "https://openfontlicense.org/"
       },
       "notes": "Shipped next to the cut-down font, as the OFL requires."
+    },
+    {
+      "id": "noto-sans-hk",
+      "title": "Noto Sans HK, variable weight",
+      "provider": "Google Fonts",
+      "url": "https://github.com/google/fonts/raw/main/ofl/notosanshk/NotoSansHK%5Bwght%5D.ttf",
+      "path": "fonts/NotoSansHK[wght].ttf",
+      "license": {
+        "id": "OFL-1.1",
+        "attribution": "Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'",
+        "url": "https://openfontlicense.org/"
+      },
+      "notes": "Hong Kong station names in Hong Kong glyph forms; `pnpm release` lists the characters they use."
+    },
+    {
+      "id": "noto-sans-hk-license",
+      "title": "Noto Sans HK licence text",
+      "provider": "Google Fonts",
+      "url": "https://github.com/google/fonts/raw/main/ofl/notosanshk/OFL.txt",
+      "path": "fonts/NotoSansHK-OFL.txt",
+      "license": {
+        "id": "OFL-1.1",
+        "attribution": "Copyright 2014-2021 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'",
+        "url": "https://openfontlicense.org/"
+      },
+      "notes": "Shipped next to the cut-down font, as the OFL requires."
     }
   ]
 }

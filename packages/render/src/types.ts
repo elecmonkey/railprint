@@ -8,6 +8,9 @@ export interface ReleaseLineProperties {
   name: string;
   from: string;
   to: string;
+  /** Language of an endpoint's local name, e.g. zh-HK. */
+  fromLang?: string;
+  toLang?: string;
   lengthKm: number;
   relations: { id: number; name: string }[];
 }
@@ -15,7 +18,12 @@ export interface ReleaseLineProperties {
 /** Properties of a feature in data/release/stations.geojson. */
 export interface ReleaseStationProperties {
   osm: string;
+  /** The name as written locally. */
   name: string;
+  /** The approved Simplified Chinese name, where the local name differs. */
+  zh?: string;
+  /** Language of `name` when it is not Simplified Chinese, e.g. zh-HK. */
+  lang?: string;
   kind: 'station' | 'junction';
   endpoint: boolean;
   lines: string[];

@@ -19,11 +19,24 @@ body {
   }
 }
 
-/* Noto Sans SC cut down to the characters the site shows, built before each
-   build (see packages/font). */
+/* Noto Sans SC cut down to the characters the site shows, and Noto Sans HK
+   to those of Hong Kong station names, built before each build (see
+   packages/font). */
 @font-face {
   font-family: 'Railprint SC';
   src: url('../../../data/cache/font/railprint-sc.woff2') format('woff2');
   font-weight: 400 700;
   font-display: swap;
+}
+
+@font-face {
+  font-family: 'Railprint HK';
+  src: url('../../../data/cache/font/railprint-hk.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+/* Local names in Hong Kong glyph forms. */
+:lang(zh-HK) {
+  font-family: var(--rp-font-zh-HK);
 }

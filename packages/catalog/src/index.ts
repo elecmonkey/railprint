@@ -24,4 +24,14 @@ export {
   type PathsFile,
   type StoredSegment,
 } from './paths.ts';
+export {
+  checkEndpointNames,
+  loadStations,
+  parseStations,
+  STATION_LANGS,
+  STATIONS_FILE,
+  type CatalogStation,
+  type StationLang,
+  type StationsFile,
+} from './stations.ts';
 export { summarizeCatalog, type CatalogSummary } from './summary.ts';

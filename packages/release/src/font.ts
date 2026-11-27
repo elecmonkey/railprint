@@ -7,6 +7,9 @@ import { join } from 'node:path';
  */
 export const CHARACTERS_FILE = 'characters.txt';
 
+/** The characters of local names in `lang`, for that language's font. */
+export const localCharactersFile = (lang: string) => `characters.${lang}.txt`;
+
 /** CJK characters and punctuation; everything else is drawn in Geist. */
 const CJK_RANGES: [number, number][] = [
   [0x3000, 0x303f], // punctuation
@@ -24,9 +27,11 @@ export interface ShownText {
     name: string;
     from: string;
     to: string;
+    fromLang?: string;
+    toLang?: string;
     relations: { name: string }[];
   }[];
-  stations: { name: string }[];
+  stations: { name: string; zh?: string; lang?: string }[];
 }
 
 /** Places in the repository whose source holds interface text. */
@@ -51,7 +56,7 @@ export async function shownCharacters(
   const texts: string[] = [];
   for (const l of release.lines)
     texts.push(l.name, l.from, l.to, ...l.relations.map((r) => r.name));
-  for (const s of release.stations) texts.push(s.name);
+  for (const s of release.stations) texts.push(s.name, s.zh ?? '');
   for (const dir of UI_DIRS)
     for await (const file of sourceFiles(join(root, dir)))
       texts.push(await readFile(file, 'utf8'));
@@ -60,13 +65,41 @@ export async function shownCharacters(
   return [...set].sort().join('');
 }
 
-/** Writes the character list; returns how many characters it holds. */
+/**
+ * Every CJK character of the local names in `lang`, sorted: of stations,
+ * and of line endpoints written by them.
+ */
+export function localCharacters(release: ShownText, lang: string): string {
+  const texts: string[] = [];
+  for (const s of release.stations) if (s.lang === lang) texts.push(s.name);
+  for (const l of release.lines) {
+    if (l.fromLang === lang) texts.push(l.from);
+    if (l.toLang === lang) texts.push(l.to);
+  }
+  const set = new Set<string>();
+  for (const text of texts) for (const c of text) if (isCJK(c)) set.add(c);
+  return [...set].sort().join('');
+}
+
+/**
+ * Writes the character list, and one for each language with a font of its
+ * own; returns how many characters each file holds.
+ */
 export async function writeCharacters(
   root: string,
   dir: string,
   release: ShownText,
-): Promise<number> {
-  const characters = await shownCharacters(root, release);
-  await writeFile(join(dir, CHARACTERS_FILE), `${characters}\n`);
-  return characters.length;
+  langs: readonly string[],
+): Promise<Record<string, number>> {
+  const files: Record<string, string> = {
+    [CHARACTERS_FILE]: await shownCharacters(root, release),
+  };
+  for (const lang of langs)
+    files[localCharactersFile(lang)] = localCharacters(release, lang);
+  const counts: Record<string, number> = {};
+  for (const [file, characters] of Object.entries(files)) {
+    await writeFile(join(dir, file), `${characters}\n`);
+    counts[file] = characters.length;
+  }
+  return counts;
 }

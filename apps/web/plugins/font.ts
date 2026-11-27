@@ -1,26 +1,27 @@
 import { copyFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { buildFont } from '@railprint/font';
+import { buildFonts, type FontFiles } from '@railprint/font';
 import type { DataLayout } from '@railprint/layout';
 import type { RsbuildPlugin } from 'rstack/app';
 
 /**
- * Cuts Noto Sans SC down to the characters the site shows before each build
- * and dev start (see packages/font); its licence ships next to the site.
+ * Cuts the site's fonts down to the characters they draw before each build
+ * and dev start (see packages/font); their licences ship next to the site.
  */
 export function pluginFont(layout: DataLayout): RsbuildPlugin {
   return {
     name: 'railprint-font',
     setup(api) {
-      let license = '';
+      let fonts: FontFiles[] = [];
       const build = async () => {
-        license = (await buildFont(layout)).license;
+        fonts = await buildFonts(layout);
       };
       api.onBeforeStartDevServer(build);
       api.onBeforeBuild(build);
-      api.onAfterBuild(() =>
-        copyFile(license, join(api.context.distPath, 'OFL-noto-sans-sc.txt')),
-      );
+      api.onAfterBuild(async () => {
+        for (const { license, licenseName } of fonts)
+          await copyFile(license, join(api.context.distPath, licenseName));
+      });
     },
   };
 }

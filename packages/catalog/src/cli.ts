@@ -2,13 +2,14 @@
 import { parseArgs } from 'node:util';
 import { dataLayout } from '@railprint/layout';
 import { loadCatalog } from './io.ts';
+import { checkEndpointNames, loadStations } from './stations.ts';
 import { summarizeCatalog } from './summary.ts';
 import { CatalogError } from './validate.ts';
 
 const USAGE = `Usage: railprint-catalog <command>
 
 Commands:
-  check     Validate data/catalog/lines.json and print a summary
+  check     Validate data/catalog/lines.json and stations.json, and print a summary
   notes     List every line that carries notes (open questions)
 `;
 
@@ -26,12 +27,17 @@ async function main(): Promise<number> {
   try {
     const catalog = await loadCatalog(layout.catalog);
     if (command === 'check') {
+      const stations = await loadStations(layout.catalog);
+      checkEndpointNames(catalog, stations);
       const summary = summarizeCatalog(catalog);
       console.log(
         `${summary.lines} lines, ${summary.confirmed} confirmed, ${summary.withNotes} with notes`,
       );
       console.log(`categories: ${JSON.stringify(summary.byCategory)}`);
       console.log(`endpoints: ${JSON.stringify(summary.endpointKinds)}`);
+      console.log(
+        `stations with approved names: ${Object.keys(stations.stations).length}`,
+      );
       return 0;
     }
     if (command === 'notes') {

@@ -187,3 +187,20 @@ test('projects a station onto the inside of a track edge', () => {
     projectOnSegment([100.02, 30], [100, 30], [100.01, 30]),
   ).toBeUndefined();
 });
+
+test('gives approved stations their local and Chinese names', () => {
+  const { lines, stations } = buildRelease(net, catalog, paths, {
+    version: 1,
+    stations: { 'node/5': { name: '丙', zh: '丙丙', lang: 'zh-HK' } },
+  });
+  const byRef = Object.fromEntries(stations.map((s) => [s.osm, s]));
+  expect(byRef['node/5']).toMatchObject({
+    name: '丙',
+    zh: '丙丙',
+    lang: 'zh-HK',
+  });
+  expect(byRef['node/1']).not.toHaveProperty('zh');
+  // A line ending there carries the language of that endpoint.
+  expect(lines[0]).toMatchObject({ to: '丙', toLang: 'zh-HK' });
+  expect(lines[0]).not.toHaveProperty('fromLang');
+});

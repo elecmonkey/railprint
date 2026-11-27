@@ -4,7 +4,10 @@ import {
   parseRef,
   type Catalog,
   type LineCategory,
+  type OsmRef,
   type PathsFile,
+  type StationLang,
+  type StationsFile,
 } from '@railprint/catalog';
 import { placeKey } from '@railprint/matching';
 import {
@@ -29,6 +32,9 @@ export interface ReleaseLine {
   /** Endpoints as written in the catalog: a junction is `<name>`. */
   from: string;
   to: string;
+  /** Language of an endpoint's local name, as for its station. */
+  fromLang?: StationLang;
+  toLang?: StationLang;
   lengthKm: number;
   relations: { id: number; name: string }[];
   /** [lon, lat] from `from` to `to`. */
@@ -38,7 +44,12 @@ export interface ReleaseLine {
 export interface ReleaseStation {
   /** OSM object, e.g. `node/123`. */
   osm: string;
+  /** The name as written locally. */
   name: string;
+  /** The approved Simplified Chinese name, where the local name differs. */
+  zh?: string;
+  /** Language of `name` when it is not Simplified Chinese. */
+  lang?: StationLang;
   kind: StationKind;
   /** True when some line starts or ends here. */
   endpoint: boolean;
@@ -177,6 +188,7 @@ export function buildRelease(
   network: RailNetwork,
   catalog: Catalog,
   paths: PathsFile,
+  names: StationsFile = { version: 1, stations: {} },
 ): Release {
   const unconfirmed = catalog.lines.filter(
     (l) => !l.osm?.confirmed || !paths.lines[l.id]?.length,
@@ -188,6 +200,10 @@ export function buildRelease(
   }
 
   const { lon, lat } = network;
+  const langOf = (key: 'fromLang' | 'toLang', ref: OsmRef) => {
+    const lang = names.stations[ref]?.lang;
+    return lang ? { [key]: lang } : {};
+  };
   const placeByRef = new Map(
     network.places.map((p) => [`${p.osm.type}/${p.osm.id}`, p]),
   );
@@ -237,6 +253,8 @@ export function buildRelease(
       category: line.category,
       from: formatEndpoint(parseEndpoint(line.from)),
       to: formatEndpoint(parseEndpoint(line.to)),
+      ...langOf('fromLang', osm.from!),
+      ...langOf('toLang', osm.to!),
       lengthKm: Math.round(lengthM / 100) / 10,
       relations: osm.relations ?? [],
       coordinates: drawn(nodes, osm.from!, osm.to!),
@@ -316,6 +334,14 @@ export function buildRelease(
     return served;
   }
 
+  /** The author's names for a station, which replace its OSM name. */
+  function approved(
+    ref: string,
+  ): Partial<Pick<ReleaseStation, 'name' | 'zh' | 'lang'>> {
+    const entry = names.stations[ref as OsmRef];
+    return entry ? { name: entry.name, zh: entry.zh, lang: entry.lang } : {};
+  }
+
   // Endpoints come from the catalog's osm block and may be unnamed track nodes.
   const endpoints = new Map<
     string,
@@ -369,6 +395,7 @@ export function buildRelease(
     const station: ReleaseStation = {
       osm: ref,
       name: ep.kind === 'junction' ? junctionName(ep.name) : ep.name,
+      ...approved(ref),
       kind: ep.kind,
       endpoint: true,
       lines: [...lines].map((i) => catalog.lines[i]!.id),
@@ -437,6 +464,7 @@ export function buildRelease(
     const station: ReleaseStation = {
       osm: ref,
       name: shown,
+      ...approved(ref),
       kind,
       endpoint: false,
       lines: [...served].sort((a, b) => a - b).map((i) => catalog.lines[i]!.id),

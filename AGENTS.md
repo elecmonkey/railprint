@@ -2,23 +2,23 @@
 
 ## Layout
 
-| Path                | Contents                                                                            |
-| ------------------- | ----------------------------------------------------------------------------------- |
-| `apps/web`          | Web map viewer (React, CSS Modules)                                                 |
-| `packages/layout`   | Canonical repository and data paths                                                 |
-| `packages/sources`  | External data sources: download, resume, checksum, lock file                        |
-| `packages/catalog`  | Line catalog types, validation and CLI                                              |
-| `packages/osm`      | OSM PBF reader, osmium-based extracts and incremental updates                       |
-| `packages/railnet`  | Railway network model: track graph, places, relations, shortest paths               |
-| `packages/matching` | Catalog line ↔ OSM matching, confirmation, audit and the review report              |
-| `packages/release`  | Final line and station GeoJSON in `data/release/`                                   |
-| `packages/style`    | Design tokens: line, station and background styles, light and dark                  |
-| `packages/render`   | Canvas renderer for the release data, shared by the web app and export              |
-| `packages/export`   | Flat image of the whole network with terrain, rivers and lakes                      |
-| `packages/font`     | Noto Sans SC cut down to `data/release/characters.txt`, built before each web build |
-| `packages/basemap`  | Rivers and lakes in `packages/basemap/assets/` (committed; rarely rebuilt)          |
-| `packages/tiles`    | Global terrain tiles, built by hand and uploaded to their own site; see its README  |
-| `data/`             | Committed data and ignored downloads, see [data/README.md](data/README.md)          |
+| Path                | Contents                                                                                            |
+| ------------------- | --------------------------------------------------------------------------------------------------- |
+| `apps/web`          | Web map viewer (React, CSS Modules)                                                                 |
+| `packages/layout`   | Canonical repository and data paths                                                                 |
+| `packages/sources`  | External data sources: download, resume, checksum, lock file                                        |
+| `packages/catalog`  | Line catalog types, validation and CLI                                                              |
+| `packages/osm`      | OSM PBF reader, osmium-based extracts and incremental updates                                       |
+| `packages/railnet`  | Railway network model: track graph, places, relations, shortest paths                               |
+| `packages/matching` | Catalog line ↔ OSM matching, confirmation, audit and the review report                              |
+| `packages/release`  | Final line and station GeoJSON in `data/release/`                                                   |
+| `packages/style`    | Design tokens: line, station and background styles, light and dark                                  |
+| `packages/render`   | Canvas renderer for the release data, shared by the web app and export                              |
+| `packages/export`   | Flat image of the whole network with terrain, rivers and lakes                                      |
+| `packages/font`     | Noto Sans SC and HK cut down to the character lists in `data/release/`, built before each web build |
+| `packages/basemap`  | Rivers and lakes in `packages/basemap/assets/` (committed; rarely rebuilt)                          |
+| `packages/tiles`    | Global terrain tiles, built by hand and uploaded to their own site; see its README                  |
+| `data/`             | Committed data and ignored downloads, see [data/README.md](data/README.md)                          |
 
 ## Requirements
 
@@ -91,4 +91,4 @@ pnpm sources verify [id...]
 - `pnpm match` must end with every line `confirmed`. Lines that turn `review` or `failed` after an update need the author's decision before `pnpm match confirm <id>`; never confirm them on your own.
 - After changing matching rules or updating OSM, run `pnpm match audit`: it re-routes confirmed lines and lists those that would change. Show the list to the author; do not re-confirm on your own.
 - After `pnpm match confirm`, run `pnpm release` and commit `data/catalog/` and `data/release/` together.
-- `pnpm release` also lists every Chinese character shown in `data/release/characters.txt`; the web build cuts Noto Sans SC down to it. After adding Chinese text to the web app, run `pnpm release` again and commit the list; a test fails while a character is missing.
+- `pnpm release` also lists every Chinese character shown in `data/release/characters.txt`; the web build cuts Noto Sans SC down to it. After adding Chinese text to the web app, run `pnpm release` again and commit the list; a test fails while a character is missing. Local station names in `data/catalog/stations.json` also get a list per language (`characters.zh-HK.txt` for Noto Sans HK).

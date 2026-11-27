@@ -77,18 +77,31 @@ export function MapCanvas({
   const [fontsLoaded, setFontsLoaded] = useState(0);
   useEffect(() => {
     if (!('fonts' in document)) return;
-    const text = [
-      ...new Set(data.stations.map((s) => s.properties.name).join('')),
-    ].join('');
+    const chars = (texts: string[]) => [...new Set(texts.join(''))].join('');
+    const loads = [
+      document.fonts.load(
+        `500 12px ${theme.font}`,
+        `${chars(data.stations.flatMap((s) => [s.properties.name, s.properties.zh ?? '']))}0123456789`,
+      ),
+      ...Object.entries(theme.localFonts).map(([lang, font]) =>
+        document.fonts.load(
+          `500 12px ${font}`,
+          chars(
+            data.stations
+              .filter((s) => s.properties.lang === lang)
+              .map((s) => s.properties.name),
+          ),
+        ),
+      ),
+    ];
     let live = true;
-    document.fonts
-      .load(`500 12px ${theme.font}`, `${text}0123456789`)
+    Promise.all(loads)
       .then(() => live && setFontsLoaded((n) => n + 1))
       .catch(() => {});
     return () => {
       live = false;
     };
-  }, [data, theme.font]);
+  }, [data, theme.font, theme.localFonts]);
   // Latest view, so several input events within one frame build on each
   // other instead of all starting from the last rendered view.
   const latest = useRef(view);
