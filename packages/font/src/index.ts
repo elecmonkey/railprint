@@ -2,8 +2,10 @@ import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { DataLayout } from '@railprint/layout';
 import {
+  fetchSources,
   loadManifest,
   readLock,
+  selectSources,
   sourceStatus,
   type SourceDefinition,
 } from '@railprint/sources';
@@ -41,6 +43,21 @@ export interface FontFiles {
   licenseName: string;
 }
 
+/** Every source the fonts need: each font and its licence text. */
+export const FONT_SOURCES = FONTS.flatMap(({ source }) => [
+  source,
+  `${source}-license`,
+]);
+
+/** Downloads the fonts' sources that are missing. Returns how many failed. */
+export async function fetchFontSources(
+  layout: DataLayout,
+  log?: (line: string) => void,
+): Promise<number> {
+  const manifest = await loadManifest(layout.sourcesManifest);
+  return fetchSources(layout, selectSources(manifest, FONT_SOURCES), { log });
+}
+
 async function sourcePath(layout: DataLayout, id: string): Promise<string> {
   const manifest = await loadManifest(layout.sourcesManifest);
   const source = manifest.sources.find((s) => s.id === id) as SourceDefinition;
@@ -50,9 +67,7 @@ async function sourcePath(layout: DataLayout, id: string): Promise<string> {
     await readLock(layout.sourcesLock),
   );
   if (status.state !== 'ok')
-    throw new Error(
-      `${id} is ${status.state}; run \`pnpm sources fetch ${id}\``,
-    );
+    throw new Error(`${id} is ${status.state}; run \`pnpm font fetch\``);
   return join(layout.sources, source.path);
 }
 

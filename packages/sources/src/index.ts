@@ -34,3 +34,4 @@ export {
   withFileLock,
   type FileLockOptions,
 } from './file-lock.ts';
+export { fetchSources, type FetchOptions } from './fetch.ts';

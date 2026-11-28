@@ -1,10 +1,8 @@
 #!/usr/bin/env node
-import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { dataLayout } from '@railprint/layout';
-import { describeError, downloadSource } from './download.ts';
-import { LockedError, withFileLock } from './file-lock.ts';
-import { readLock, recordLockEntry } from './lock.ts';
+import { fetchSources } from './fetch.ts';
+import { readLock } from './lock.ts';
 import { loadManifest, selectSources } from './manifest.ts';
 import { sourceStatus } from './status.ts';
 
@@ -79,33 +77,14 @@ async function main(): Promise<number> {
     }
 
     case 'fetch': {
-      let failures = 0;
-      for (const source of selectSources(manifest, ids)) {
-        const destination = join(layout.sources, source.path);
-        try {
-          // One process per file; other processes skip it and move on.
-          await withFileLock(`${destination}.lock`, async () => {
-            // Re-read: another process may have finished this file meanwhile.
-            const current = await readLock(layout.sourcesLock);
-            const status = await sourceStatus(source, layout.sources, current);
-            if (status.state === 'ok' && !values.force) {
-              log(`${source.id}: up to date`);
-              return;
-            }
-            const entry = await downloadSource(source, destination, { log });
-            await recordLockEntry(layout.sourcesLock, entry);
-          });
-        } catch (error) {
-          if (error instanceof LockedError) {
-            log(
-              `${source.id}: being downloaded by process ${error.holder}, skipped`,
-            );
-            continue;
-          }
-          failures++;
-          log(`${source.id}: FAILED — ${describeError(error)}`);
-        }
-      }
+      const failures = await fetchSources(
+        layout,
+        selectSources(manifest, ids),
+        {
+          force: values.force,
+          log,
+        },
+      );
       return failures ? 1 : 0;
     }
 

@@ -49,18 +49,19 @@ Run from the repository root:
 | `pnpm basemap`                                | Rebuild rivers and lakes (see packages/basemap/README.md)                          |
 | `pnpm tiles`                                  | Build the terrain tiles in `packages/tiles/dist/` and their hash in `version.json` |
 | `pnpm export [--width --scale --theme --out]` | Render the network as an image in `data/cache/export/`                             |
+| `pnpm font fetch`                             | Download the fonts and their licences                                              |
 | `pnpm font`                                   | Build the cut-down font in `data/cache/font/` (the web build does it itself)       |
 
 ## JavaScript toolchain
 
 The JavaScript toolchain is [Rstack](https://rstack.rs), run as `pnpm exec rs`.
 
-| Command      | Purpose                                                             |
-| ------------ | ------------------------------------------------------------------- |
-| `pnpm dev`   | Start the web app at http://localhost:3000                          |
-| `pnpm build` | Fetch the font source, then build the web app into `apps/web/dist/` |
-| `pnpm test`  | Run all package tests                                               |
-| `pnpm check` | Lint, type check and format check (`rs check --type-check`)         |
+| Command      | Purpose                                                                           |
+| ------------ | --------------------------------------------------------------------------------- |
+| `pnpm dev`   | Start the web app at http://localhost:3000                                        |
+| `pnpm build` | Fetch the fonts (`pnpm font fetch`), then build the web app into `apps/web/dist/` |
+| `pnpm test`  | Run all package tests                                                             |
+| `pnpm check` | Lint, type check and format check (`rs check --type-check`)                       |
 
 ## Package conventions
 

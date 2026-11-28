@@ -13,8 +13,7 @@ try {
   fetched = false;
 }
 
-// Needs `pnpm sources fetch noto-sans-sc noto-sans-sc-license noto-sans-hk
-// noto-sans-hk-license`.
+// Needs `pnpm font fetch`.
 test.skipIf(!fetched)('cuts each font down to a small woff2', async () => {
   const built = await buildFonts(layout);
   expect(built.map((f) => f.licenseName)).toEqual([
