@@ -8,13 +8,13 @@
   "attribution": "© OpenStreetMap contributors",
   "license": "ODbL-1.0",
   "counts": {
-    "lines": 179,
-    "stations": 2092,
-    "endpoints": 239,
-    "lengthKm": 35656
+    "lines": 181,
+    "stations": 2094,
+    "endpoints": 241,
+    "lengthKm": 35655
   },
   "bytes": {
-    "lines": 3344908,
-    "stations": 461527
+    "lines": 3345785,
+    "stations": 462012
   }
 }
