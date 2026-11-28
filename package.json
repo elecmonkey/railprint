@@ -1,11 +1,11 @@
 {
-  "name": "railprint",
+  "name": "@railprint/monorepo",
   "private": true,
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "pnpm font fetch && pnpm --filter web build",
-    "dev": "pnpm --filter web dev",
+    "build": "pnpm font fetch && pnpm --filter @railprint/web build",
+    "dev": "pnpm --filter @railprint/web dev",
     "test": "pnpm -r test",
     "check": "rs check --type-check",
     "format": "rs fmt",
