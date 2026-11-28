@@ -261,6 +261,14 @@ export class Matcher {
       }
       return { candidates: [place], pinned: true };
     }
+    const endpoint = parseEndpoint(text);
+    if (endpoint.kind === 'marker') {
+      issues.push({
+        code: 'endpoint-missing',
+        message: `${label}「[${endpoint.name}]」是自设标记，须在 osm 中固定一个轨道节点`,
+      });
+      return { candidates: [], pinned: false };
+    }
     const match = this.places.resolve(text);
     this.endpointIssues(match, label, issues);
     return { candidates: match.candidates, pinned: false };

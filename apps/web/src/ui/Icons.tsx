@@ -14,7 +14,7 @@ function TrainIcon() {
   );
 }
 
-/** Track splitting in two, for junctions (线路所). */
+/** Track splitting in two, for junctions (线路所) and markers. */
 function SwitchIcon() {
   return (
     <svg viewBox="0 0 16 16" className={styles.pictogram} aria-hidden="true">
@@ -25,11 +25,7 @@ function SwitchIcon() {
 
 /** Pictogram for a station; its size comes from the `--icon` CSS variable. */
 export function StationIcon({ station }: { station: RenderStation }) {
-  return station.properties.kind === 'junction' ? (
-    <SwitchIcon />
-  ) : (
-    <TrainIcon />
-  );
+  return station.properties.kind !== 'station' ? <SwitchIcon /> : <TrainIcon />;
 }
 
 /** A stroke of the line's category colour, named on hover. */

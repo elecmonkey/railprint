@@ -19,12 +19,13 @@ test.each([
   ['西安东', { kind: 'station', name: '西安东' }],
   ['<耿镇>', { kind: 'junction', name: '耿镇' }],
   [' <K141> ', { kind: 'junction', name: 'K141' }],
+  ['[鸦雀岭西]', { kind: 'marker', name: '鸦雀岭西' }],
 ])('parseEndpoint(%s)', (text, expected) => {
   expect(parseEndpoint(text)).toEqual(expected);
   expect(formatEndpoint(parseEndpoint(text))).toBe(text.trim());
 });
 
-test.each(['', '<>', '<a', 'a/b', '[吕河]'])(
+test.each(['', '<>', '<a', 'a/b', '[]', '[a', '[<a>]'])(
   'parseEndpoint rejects %j',
   (text) => {
     expect(() => parseEndpoint(text)).toThrow(/Invalid endpoint/);

@@ -149,6 +149,25 @@ test('merges endpoints that pin one station through different objects', () => {
   ]);
 });
 
+test('writes a marker as [name], wherever it is shown', () => {
+  const marked: Catalog = {
+    version: 2,
+    lines: catalog.lines.map((l) =>
+      l.id === 'link' ? { ...l, id: 'link2', to: '[丁]' } : l,
+    ),
+  };
+  const release = buildRelease(net, marked, {
+    ...paths,
+    lines: { hs: paths.lines.hs!, link2: paths.lines.link! },
+  });
+  expect(release.lines[1]).toMatchObject({ from: '<乙>', to: '[丁]' });
+  expect(release.stations.find((s) => s.osm === 'node/4')).toMatchObject({
+    name: '[丁]',
+    kind: 'marker',
+    endpoint: true,
+  });
+});
+
 test('refuses unconfirmed or broken lines', () => {
   const unconfirmed: Catalog = {
     version: 2,

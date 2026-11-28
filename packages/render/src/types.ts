@@ -24,7 +24,8 @@ export interface ReleaseStationProperties {
   zh?: string;
   /** Language of `name` when it is not Simplified Chinese, e.g. zh-HK. */
   lang?: string;
-  kind: 'station' | 'junction';
+  /** `marker`: a point the author named on the track, written `[name]`. */
+  kind: 'station' | 'junction' | 'marker';
   endpoint: boolean;
   lines: string[];
 }

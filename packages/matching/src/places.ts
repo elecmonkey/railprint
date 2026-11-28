@@ -10,6 +10,8 @@ import { placeKey } from './names.ts';
 const KIND_RAILWAY: Record<EndpointKind, ReadonlySet<string>> = {
   station: new Set(['station', 'halt']),
   junction: new Set(['junction', 'service_station', 'crossover']),
+  // A marker is the author's own point; no OSM place stands for it.
+  marker: new Set(),
 };
 
 export interface PlaceMatch {

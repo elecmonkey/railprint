@@ -147,7 +147,7 @@ export function widthScale(pixelsPerDegree: number): number {
 
 /**
  * Whether a station gets a symbol and a name at this zoom. Junctions
- * (线路所) never get a name unless selected.
+ * (线路所) and markers never get a name unless selected.
  */
 export function stationDisplay(
   s: RenderStation,
@@ -161,7 +161,7 @@ export function stationDisplay(
   const endpoint = s.properties.endpoint;
   const onLine =
     highlight.line !== undefined && s.properties.lines.includes(highlight.line);
-  const named = s.properties.kind !== 'junction';
+  const named = s.properties.kind === 'station';
   if (onLine)
     return {
       symbol: ppd >= ZOOM.lineStations,
@@ -314,7 +314,7 @@ export function draw({
     symbolScale;
   const shape = (s: RenderStation, x: number, y: number, r: number) => {
     ctx.beginPath();
-    if (s.properties.kind === 'junction') {
+    if (s.properties.kind !== 'station') {
       ctx.moveTo(x - r, y);
       ctx.lineTo(x, y - r);
       ctx.lineTo(x + r, y);

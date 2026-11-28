@@ -23,13 +23,13 @@ import {
 } from '@railprint/railnet';
 
 /** Place kinds shown on the map; yards and depots are not included. */
-export type StationKind = 'station' | 'junction';
+export type StationKind = 'station' | 'junction' | 'marker';
 
 export interface ReleaseLine {
   id: string;
   name: string;
   category: LineCategory;
-  /** Endpoints as written in the catalog: a junction is `<name>`. */
+  /** Endpoints as written in the catalog: a junction is `<name>`, a marker `[name]`. */
   from: string;
   to: string;
   /** Language of an endpoint's local name, as for its station. */
@@ -66,6 +66,13 @@ export interface Release {
 /** A junction's name as shown: 横山线路所 and 横山 are both `<横山>`. */
 export function junctionName(name: string): string {
   return `<${name.replace(/线路所$/, '')}>`;
+}
+
+/** An endpoint's name as shown: `<横山>` for a junction, `[鸦雀岭西]` for a marker. */
+function shownName(endpoint: { name: string; kind: StationKind }): string {
+  return endpoint.kind === 'junction'
+    ? junctionName(endpoint.name)
+    : formatEndpoint(endpoint);
 }
 
 /** A relation's member station belongs to a line within this distance of its path. */
@@ -394,7 +401,7 @@ export function buildRelease(
     consumed.add(ref);
     const station: ReleaseStation = {
       osm: ref,
-      name: ep.kind === 'junction' ? junctionName(ep.name) : ep.name,
+      name: shownName(ep),
       ...approved(ref),
       kind: ep.kind,
       endpoint: true,
@@ -404,7 +411,7 @@ export function buildRelease(
     osmNames.set(station, osmName ?? ep.name);
     pinned.push({
       station,
-      // A bare track node only stands in for a station OSM lacks.
+      // A bare track node stands in for a station OSM lacks, or for a marker.
       rank: place ? rank(place) : 3,
     });
   }
@@ -460,7 +467,7 @@ export function buildRelease(
       continue;
     }
     const kind = PLACE_KIND[place.railway]!;
-    const shown = kind === 'junction' ? junctionName(name) : name;
+    const shown = shownName({ name, kind });
     const station: ReleaseStation = {
       osm: ref,
       name: shown,

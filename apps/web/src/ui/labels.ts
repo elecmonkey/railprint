@@ -13,7 +13,7 @@ export function formatKm(km: number): string {
 
 /**
  * A station's name in full: the map writes junctions `<十里岩>`, titles
- * spell them out as 十里岩线路所.
+ * spell them out as 十里岩线路所. Markers stay `[鸦雀岭西]` everywhere.
  */
 export function fullName(station: RenderStation): string {
   const { name, kind } = station.properties;

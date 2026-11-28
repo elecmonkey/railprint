@@ -40,14 +40,15 @@ Run `pnpm run catalog check` after editing.
 
 ### Endpoint notation
 
-| Written  | Meaning                                             |
-| -------- | --------------------------------------------------- |
-| `西安东` | station                                             |
-| `<耿镇>` | junction (线路所), shown as `<耿镇>` on the map too |
+| Written      | Meaning                                                                                                                    |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `西安东`     | station                                                                                                                    |
+| `<耿镇>`     | junction (线路所), shown as `<耿镇>` on the map too                                                                        |
+| `[鸦雀岭西]` | marker: a point the author names where OSM and reality have neither station nor junction; shown as `[鸦雀岭西]` everywhere |
 
 ### OSM endpoints
 
-`osm.from` / `osm.to` are `node/<id>` or `way/<id>`: normally the station or junction found by name. Where OSM has no named object (for example the point where a link line meets a main line), it is a bare track node, chosen by hand; a note on the line says why.
+`osm.from` / `osm.to` are `node/<id>` or `way/<id>`: normally the station or junction found by name. Where OSM has no named object (for example the point where a link line meets a main line), it is a bare track node, chosen by hand; a note on the line says why. A marker is never looked up by name: both its lines pin the same track node.
 
 ### IDs
 
