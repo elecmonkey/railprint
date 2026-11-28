@@ -98,12 +98,12 @@ test('collects stations from relation members, path nodes and endpoints', () => 
     endpoint: true,
     lines: ['hs', 'link'],
   });
-  // <丁> has no OSM name of its own.
+  // <丁> has no OSM name of its own; hs runs through it.
   expect(byRef['node/4']).toMatchObject({
     name: '<丁>',
     kind: 'junction',
     endpoint: true,
-    lines: ['link'],
+    lines: ['hs', 'link'],
   });
   expect(byRef['node/5']).toMatchObject({
     name: '丙',

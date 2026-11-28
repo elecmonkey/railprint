@@ -397,6 +397,8 @@ export function buildRelease(
           `Endpoint ${ref} is not in the extract; run \`pnpm match\``,
         );
       coordinates = [round6(lon[n]!), round6(lat[n]!)];
+      // A bare track node is on every line whose path runs through it.
+      for (const l of nodeLines.get(n) ?? []) lines.add(l);
     }
     consumed.add(ref);
     const station: ReleaseStation = {
